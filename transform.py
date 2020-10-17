@@ -1,5 +1,4 @@
 import torchvision.transforms as transforms
-import numpy as np
 
 
 def transform(mode, img_size):
@@ -26,6 +25,3 @@ def transform(mode, img_size):
     return {'train': transform_train,
             'val': transform_val,
             'test': transform_val}
-
-
-print(np.random.rand(3,))
