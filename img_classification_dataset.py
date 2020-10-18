@@ -58,15 +58,15 @@ class ImageClassificationDataset(Data.Dataset):
     def plotting(self, figsize=(12, 12), types=['freqs']):
         """Plot distribution of classes with number"""
         count_dict = self.count_img_per_class()
-        plt.style.use('dark_background')
+        # plt.style.use('dark_background')
         ax = plt.figure(figsize=figsize)
 
-        if 'freq' in types:
+        if 'freqs' in types:
             barplot = plt.bar(list(count_dict.keys()), list(count_dict.values()), color=[
                               np.random.rand(3,) for _ in range(len(self.n_classes))])
             for rect_per_class in barplot:
                 height = rect_per_class.get_height()
-                plt.text(rect.get_x() + rect.get_width()/2.0, '%d' %
+                plt.text(rect_per_class.get_x() + rect_per_class.get_width()/2.0, '%d' %
                          int(height), ha='center', va='bottom')
             plt.title('Classes Frequencies')
 
