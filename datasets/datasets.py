@@ -10,18 +10,18 @@ from PIL import Image
 
 class TextClassificationDataset(Data.Dataset):
     """
-    Load a dataset.csv with input of (category, text)
+    Handling a dataset.csv with input of (category, text)
     """
 
     def __init__(self, root,
-                 tokenizer=str.split(''),
+                 # tokenizer=str.split(''),
                  n_samples=None,
                  shuffle=False,
                  skip_header=True
                  ):
         self.root = root
         self.n_samples = n_samples
-        self.tokenizer = tokenizer
+        #self.tokenizer = tokenizer
         self.shuffle = shuffle
         self.skip_header = skip_header
         self.data = self.load_data()[0]
@@ -46,19 +46,50 @@ class TextClassificationDataset(Data.Dataset):
         n_categories = list(set([line[0] for line in data]))
         return (data, n_categories)
 
+    def count_text_per_cat(self):
+        count_dict = {}
+        for cat, text in self.data:
+            if cat in count_dict.keys():
+                count_dict[cat] += 1
+            else:
+                count_dict[cat] = 1
+
+        return count_dict
+
+    def plotting(self, figsize=(12, 12), types=['freqs']):
+        """Plot distribution of classes with number"""
+        count_dict = self.count_text_per_cat()
+        # plt.style.use('dark_background')
+        ax = plt.figure(figsize=figsize)
+
+        if 'freqs' in types:
+            barplot = plt.bar(list(count_dict.keys()), list(count_dict.values()), color=[
+                np.random.rand(3,) for _ in range(len(self.n_categories))])
+
+            for rect_per_class in barplot:
+                height = rect_per_class.get_height()
+                plt.xlabel('Number of category')
+                plt.ylabel('Number of text per category')
+                plt.text(rect_per_class.get_x() + rect_per_class.get_width()/2.0, '%d' %
+                         int(height), ha='center', va='bottom')
+
+            plt.title('Category Frequencies')
+
+        plt.show()
+
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
         category, text = self.data[idx]
-        tokens = self.tokenizer(text)
+        tokens = text.split()
         return {'text': tokens, 'category': category}
 
     def __str__(self):
         title = 'Dataset for Text Classification\n\n'
-        samples = f'Number of samples: {len(self.data)}\n'
-        classes = f'Number of classes: {len(self.n_categories)}\n'
-        return title + samples + classes
+        text = f'Number of text: {len(self.data)}\n'
+        categories = f'Number of category: {len(self.n_categories)}\n'
+        return title + text + categories
 
 
 class ImageClassificationDataset(Data.Dataset):
@@ -84,8 +115,10 @@ class ImageClassificationDataset(Data.Dataset):
             img_labels = sorted(os.listdir(os.path.join(self.root, cls)))
             for label in img_labels:
                 data.append([f'{cls}/{label}', cls])
+
         if self.shuffle:
             random.shuffle(data)
+
         data = data[:self.n_samples] if self.n_samples is not None and self.n_samples <= len(
             data) else data
 
@@ -118,10 +151,14 @@ class ImageClassificationDataset(Data.Dataset):
         if 'freqs' in types:
             barplot = plt.bar(list(count_dict.keys()), list(count_dict.values()), color=[
                 np.random.rand(3,) for _ in range(len(self.n_classes))])
+
             for rect_per_class in barplot:
                 height = rect_per_class.get_height()
+                plt.xlabel('Number of class')
+                plt.ylabel('Number of image per class')
                 plt.text(rect_per_class.get_x() + rect_per_class.get_width()/2.0, '%d' %
                          int(height), ha='center', va='bottom')
+
             plt.title('Classes Frequencies')
 
         plt.show()
@@ -131,9 +168,12 @@ class ImageClassificationDataset(Data.Dataset):
 
     def __getitem__(self, idx):
         label, cls = self.data[idx]
+        #cls_id = self.class_idxes[cls]
+
         img_path = os.path.join(self.root, label)
         img = Image.open(img_path).convert('RGB')
         assert len(img.getbands()) == 3, 'Gray image or sth'
+
         if self.transforms:
             root_name = os.path.dirname(self.root)
             if mode == 'train':
@@ -146,7 +186,7 @@ class ImageClassificationDataset(Data.Dataset):
                 print('Error! Please rename your folder')
 
         return {'img': img,
-                'label': cls}
+                'label': cls}  # cls_id
 
     def __str__(self):
         title = 'Dataset for Image Classification\n\n'
