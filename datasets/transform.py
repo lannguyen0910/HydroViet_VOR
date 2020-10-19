@@ -1,27 +1,28 @@
 import torchvision.transforms as transforms
 
 
-def transform(mode, img_size):
+def transform(img_size, style='transform_1'):
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
-    normalize = transforms.Normalize(mean=mean, std=std)
-    if mode == 'train':
+    if style == 'transform_1':
+        normalize = transforms.Normalize(mean=mean, std=std)
+
         transform_train = transforms.Compose([
             transforms.Resize(img_size[0]),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize
         ])
-    elif mode == 'val':
+
         transform_val = transforms.Compose([
             transforms.Resize(img_size[0]),
             transforms.ToTensor(),
             normalize
         ])
 
-    else:
-        print('Error in transform!')
+        return {'train': transform_train,
+                'val': transform_val,
+                'test': transform_val}
 
-    return {'train': transform_train,
-            'val': transform_val,
-            'test': transform_val}
+    else:
+        print('Wrong transform style!')

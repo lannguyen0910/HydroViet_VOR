@@ -176,12 +176,12 @@ class ImageClassificationDataset(Data.Dataset):
 
         if self.transforms:
             root_name = os.path.dirname(self.root)
-            if mode == 'train':
-                img = self.transforms('train', img)['train']
-            elif mode == 'val':
-                img = self.transforms('val', img)['val']
-            elif mode == 'test':
-                img = self.transforms('test', img)['test']
+            if self.mode == 'train':
+                img = self.transforms(img)['train']
+            elif self.mode == 'val':
+                img = self.transforms(img)['val']
+            elif self.mode == 'test':
+                img = self.transforms(img)['test']
             else:
                 print('Error! Please rename your folder')
 
