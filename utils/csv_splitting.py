@@ -45,6 +45,8 @@ for cls_id, cls in class_dict.items():
     DICT[train_set][cls_id] = shuffle[:train_size]
     DICT[val_set][cls_id] = shuffle[train_size:]
 
+
+# Create train.csv and val.csv from dataset.csv
 for dicts, classes in DICT.items():
     new = [['category', 'text']]
     new.extend([

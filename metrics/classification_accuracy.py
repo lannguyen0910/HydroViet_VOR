@@ -2,7 +2,7 @@ import torch
 
 
 class ClassificationAccuracyMetric():
-    def __init__(self, *args, **kwarngs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.reset()
 
     def calculate(self, output, target):
