@@ -143,12 +143,13 @@ class TextTokenizer:
                 tok = self.replace_consecutive(tok)
 
             if 'autospell' in types:
-                tok = self.autospell(sentence)
+                tok = self.autospell(tok)
 
             if (tok is not None) and (not tok.isspace()) and (tok != ''):
                 results.append(tok)
 
-        n_grams = self.add_n_grams(results) if 'ngrams' in types else []
-        results = results + n_grams
+        if 'n_grams' in self.steps:
+            n_grams = self.add_n_grams(results) if 'n_grams' in types else []
+            results = results + n_grams
 
         return results
