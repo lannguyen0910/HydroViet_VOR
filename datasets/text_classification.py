@@ -67,7 +67,7 @@ class TextClassificationDataset(Data.Dataset):
                 height = rect_per_class.get_height()
                 plt.xlabel('Number of category')
                 plt.ylabel('Number of text per category')
-                plt.text(rect_per_class.get_x() + rect_per_class.get_width()/2.0, '%d' %
+                plt.text(rect_per_class.get_x() + rect_per_class.get_width()/2.0,  height, '%d' %
                          int(height), ha='center', va='bottom')
 
             plt.title('Category Frequencies')

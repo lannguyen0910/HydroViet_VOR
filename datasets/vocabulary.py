@@ -1,7 +1,7 @@
 import torch.utils.data as data
 import sys
 from utils.nlp_tokenizer import TextTokenizer
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 sys.path.append('..')
@@ -28,7 +28,7 @@ class VocabularyDataset(data.Dataset):
 
         self.max_length = max_length  # Max length for vocab bag
         self.freqs = {}  # number of repeatations of a word
-        self.vocab = 4
+        self.vocab_size = 4
 
         self.special_tokens = {
             'init_token': init_token,
@@ -45,13 +45,13 @@ class VocabularyDataset(data.Dataset):
 
     def build_vocab(self, data_set):
         self.dataset = data_set
-        self.data = data_set.data  # data is a list of text in csv_dataset
+        self.data = data_set.data  # data is a list of text in text_dataset
 
         print('Pending ......... ')
         for sentence in tqdm(self.data):
-            for token in sentence.split(''):
+            for token in sentence:
                 if token not in self.stoi:
-                    if self.max_size is not None:
+                    if self.max_length is not None:
                         if self.max_length <= self.vocab_size:
                             continue
 
@@ -63,7 +63,7 @@ class VocabularyDataset(data.Dataset):
                     self.freqs[token] += 1
 
         self.freqs = {tok: freq for tok, freq in sorted(
-            self.freqs.items(), key=lambda item: item[1], reversed=True)}
+            self.freqs.items(), key=lambda item: item[1], reverse=True)}
         print('Done Bulding!')
 
     def most_common(self, top=None, n_grams=None):  # top-n frequencies of data
