@@ -23,6 +23,8 @@ class TextClassificationDataset(Data.Dataset):
         self.skip_header = skip_header
         self.data = self.load_data()[0]
         self.n_categories = self.load_data()[1]
+        self.text = self.load_data()[2]
+
 
     def load_data(self):
         data = []
@@ -41,7 +43,8 @@ class TextClassificationDataset(Data.Dataset):
 
         # First Column -> Categories , Second Column -> Text
         n_categories = list(set([line[0] for line in data]))
-        return (data, n_categories)
+        text = list(set([text[1] for text in data]))
+        return (data, n_categories, text)
 
     def count_text_per_cat(self):
         count_dict = {}

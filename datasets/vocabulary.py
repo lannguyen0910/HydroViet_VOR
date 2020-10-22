@@ -32,24 +32,28 @@ class VocabularyDataset(data.Dataset):
 
         self.special_tokens = {
             'init_token': init_token,
-            'pad_token': pad_token,
             'eos_token': eos_token,
+            'pad_token': pad_token,
             'unk_token': unk_token
         }
         self.stoi = {
-            pad_token: 0,
-            init_token: 1,
-            eos_token: 2,
+            init_token: 0,
+            eos_token: 1,
+            pad_token: 2,
             unk_token: 3
         }
 
     def build_vocab(self, data_set):
         self.dataset = data_set
-        self.data = data_set.data  # data is a list of text in text_dataset
-
+        self.data = data_set.text  # data is a list of text in text_dataset
+        types = ['lower', 'remove_punctuations', 'snowball', 'remove_emojis'
+                 'lemmatize', 'remove_tags', 'replace_consecutive', 'n_grams']
+        # print('Data: ', self.data)
         print('Pending ......... ')
         for sentence in tqdm(self.data):
-            for token in sentence:
+            # print('Sentence: ', sentence)
+            for token in self.tokenizer.preprocess(sentence, types):
+                # print('Token after preprocess: ', token)
                 if token not in self.stoi:
                     if self.max_length is not None:
                         if self.max_length <= self.vocab_size:
@@ -61,9 +65,14 @@ class VocabularyDataset(data.Dataset):
 
                 else:
                     self.freqs[token] += 1
-
+            #     break
+            # break
         self.freqs = {tok: freq for tok, freq in sorted(
             self.freqs.items(), key=lambda item: item[1], reverse=True)}
+
+        # for tok, freq in self.freqs.items():
+        #     print('Tok: ', tok)
+
         print('Done Bulding!')
 
     def most_common(self, top=None, n_grams=None):  # top-n frequencies of data
@@ -95,7 +104,7 @@ class VocabularyDataset(data.Dataset):
                         common_dict[tok] = freq
                         i += 1
 
-            if n_grams == '2':
+            elif n_grams == '2':
                 for tok, freq in self.freqs.items():
                     if i >= top:
                         break
@@ -103,7 +112,7 @@ class VocabularyDataset(data.Dataset):
                         common_dict[tok] = freq
                         i += 1
 
-            if n_grams == '3':
+            elif n_grams == '3':
                 for tok, freq in self.freqs.items():
                     if i >= top:
                         break
@@ -122,8 +131,8 @@ class VocabularyDataset(data.Dataset):
 
             if "random" in types:
                 count_dict = self.most_common(top)
-                barplot = plt.bar(list(count_dict.keys()),
-                                  list(count_dict.values()), color='black')
+                barplot = plt.barh(list(count_dict.keys()),
+                                   list(count_dict.values()), color='black')
                 plt.xlabel('Unique tokens')
                 plt.ylabel('Token Frequencies')
                 plt.title(f'Top {top} frequencies distribution')
@@ -131,8 +140,8 @@ class VocabularyDataset(data.Dataset):
             else:
                 if '1' in types:
                     count_dict = self.most_common(top, '1')
-                    barplot = plt.bar(list(count_dict.keys()),
-                                      list(count_dict.values()), color='red')
+                    barplot = plt.barh(list(count_dict.keys()),
+                                       list(count_dict.values()), color='red')
                     plt.xlabel('Unique tokens')
                     plt.ylabel('Token Frequencies')
                     plt.title(f'Top {top} frequencies distribution of 1_gram')
@@ -140,6 +149,7 @@ class VocabularyDataset(data.Dataset):
                 if 'n_grams' in self.tokenizer.steps:
                     if '2' in types:
                         count_dict = self.most_common(top, '2')
+                        print('Count_dict 2: ', count_dict)
                         barplot = plt.bar(list(count_dict.keys()),
                                           list(count_dict.values()), color='green')
                         plt.xlabel('Unique tokens')
@@ -157,7 +167,7 @@ class VocabularyDataset(data.Dataset):
                             f'Top {top} frequencies distribution of 3_gram')
 
         plt.show()
-        plt.legend()
+        # plt.legend()
 
     def __len__(self) -> int:
         return self.vocab_size

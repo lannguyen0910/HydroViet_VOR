@@ -5,9 +5,14 @@ from nltk import ngrams
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
 from string import punctuation
-from autocorrect import spell
+from autocorrect import Speller
+from nltk.tokenize import word_tokenize
 
 nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
+
+spell = Speller(lang='en')
 stopwords = stopwords.words('english')
 snowball_stemmer = SnowballStemmer('english')
 wordnet_lemmatizer = WordNetLemmatizer()
@@ -37,23 +42,20 @@ class TextTokenizer:
         from remove space from string and send to list
 
         """
-        tokens = []
-        for word in nltk.sent_tokenizer(sentence):
-            tokens.append(word)
-
+        tokens = sentence.split('')
         return tokens
 
     def to_lowercase(self, sentence):
         return sentence.lower()
 
     def remove_punctuations(self, sentence):
-        return "".join([word for word in sentence if word not in self.punctuation and not word.isdigit()])
+        return "".join([word for word in sentence if word not in self.punctuations and not word.isdigit()])
 
     def remove_stopwords(self, sentence):
         """
         Remove common words from sentence
         """
-        return ' '.join([word for word in nltk.word_tokenize(sentence) if word not in self.stopwords_list])
+        return ' '.join([word for word in word_tokenize(sentence) if word not in self.stopwords_list])
 
     def remove_tags(self, sentence):
         """
@@ -63,7 +65,7 @@ class TextTokenizer:
         return cleaned
 
     def replace_consecutive(self, sentence):
-        sentence = re.sub(r"(.)\1+", r"\1\1", sentence)
+        sentence = re.sub("(.)\1+", "\1\1", str(sentence))
         return sentence
 
     def extract_emoji(self, sentence):
@@ -84,7 +86,7 @@ class TextTokenizer:
         """
         Snowball_stem words in a sentence
         """
-        stem = [self.snowball_stemmer.stem(word) for sen in nltk.sent_tokenizer(sentence)
+        stem = [self.snowball_stemmer.stem(word) for sen in word_tokenize(sentence)
                 for word in nltk.word_tokenize(sen)]
         return ''.join(stem)
 
@@ -92,8 +94,7 @@ class TextTokenizer:
         """
         Lemmatize words in a sentence
         """
-        lemmatized = [self.wordnet_lemmatizer.lemmatize(word) for sen in nltk.sent_tokenize(sentence)
-                      for word in nltk.word_tokenizer(sen)]
+        lemmatized = self.wordnet_lemmatizer.lemmatize(sentence)
 
         return lemmatized
 
@@ -106,7 +107,7 @@ class TextTokenizer:
         Create list of bigrams and trigrams [(),(),(),...]
         """
         bigrams = ngrams(tokens, 2)
-        trigrams = ngrams(tokens, 2)
+        trigrams = ngrams(tokens, 3)
         bi_tri_grams_list = []
 
         for ele in bigrams:
@@ -118,7 +119,7 @@ class TextTokenizer:
 
     def preprocess(self, tokens, types):
         results = []
-        for tok in tokens:
+        for tok in tokens.split():
 
             if 'remove_emojis' not in types:
                 tok, emo = self.extract_emoji(tok)
