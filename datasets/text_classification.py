@@ -25,7 +25,6 @@ class TextClassificationDataset(Data.Dataset):
         self.n_categories = self.load_data()[1]
         self.text = self.load_data()[2]
 
-
     def load_data(self):
         data = []
         with open(self.root, 'r', encoding='utf8') as csv_file:
@@ -87,6 +86,7 @@ class TextClassificationDataset(Data.Dataset):
 
     def __str__(self):
         title = 'Dataset for Text Classification\n\n'
-        text = f'Number of text: {len(self.data)}\n'
-        categories = f'Number of category: {len(self.n_categories)}\n'
+        text = f'Number of unique text: {len(self.text)}\n'
+        categories = f'Number of unique category: {len(self.n_categories)}\n'
+
         return title + text + categories

@@ -8,6 +8,11 @@ sys.path.append('..')
 # print(sys.path)
 
 
+def convertTuple(tup):
+    str = ', '.join(tup)
+    return str
+
+
 class VocabularyDataset(data.Dataset):
     """
     Build own vocabulary dataset of sentence from csv
@@ -22,7 +27,7 @@ class VocabularyDataset(data.Dataset):
                  unk_token='<unk>'):
 
         if tokenizer is None:
-            self.tokenizer = TextTokenizer()
+            self.tokenizer = TextTokenizer(steps=['normal'])
         else:
             self.tokenizer = tokenizer
 
@@ -100,15 +105,16 @@ class VocabularyDataset(data.Dataset):
                 for tok, freq in self.freqs.items():
                     if i >= top:
                         break
-                    if len(tok) == 1:
+                    if type(tok) == str:
                         common_dict[tok] = freq
                         i += 1
 
             elif n_grams == '2':
                 for tok, freq in self.freqs.items():
+                    print('Tok 2: ', tok)
                     if i >= top:
                         break
-                    if len(tok) == 2:
+                    if len(tok) == 2 and type(tok) == tuple:
                         common_dict[tok] = freq
                         i += 1
 
@@ -116,13 +122,13 @@ class VocabularyDataset(data.Dataset):
                 for tok, freq in self.freqs.items():
                     if i >= top:
                         break
-                    if len(tok) == 3:
+                    if len(tok) == 3 and type(tok) == tuple:
                         common_dict[tok] = freq
                         i += 1
 
         return common_dict
 
-    def plotting(self, top=None, types=None, figsize=(12, 12)):
+    def plotting(self, top=None, types=None, figsize=(16, 16)):
         if types is None:
             types = ['freqs', 'random']
 
@@ -149,9 +155,11 @@ class VocabularyDataset(data.Dataset):
                 if 'n_grams' in self.tokenizer.steps:
                     if '2' in types:
                         count_dict = self.most_common(top, '2')
-                        print('Count_dict 2: ', count_dict)
-                        barplot = plt.bar(list(count_dict.keys()),
-                                          list(count_dict.values()), color='green')
+                        new_count_dict = {convertTuple(
+                            k): v for k, v in count_dict.items()}
+                        # print('Count_dict 2: ', count_dict)
+                        barplot = plt.bar(list(new_count_dict.keys()),
+                                          list(new_count_dict.values()), color='green')
                         plt.xlabel('Unique tokens')
                         plt.ylabel('Token Frequencies')
                         plt.title(
@@ -159,8 +167,11 @@ class VocabularyDataset(data.Dataset):
 
                     if '3' in types:
                         count_dict = self.most_common(top, '3')
-                        barplot = plt.bar(list(count_dict.keys()),
-                                          list(count_dict.values()), color='blue')
+                        new_count_dict = {convertTuple(
+                            k): v for k, v in count_dict.items()}
+
+                        barplot = plt.bar(list(new_count_dict.keys()),
+                                          list(new_count_dict.values()), color='blue')
                         plt.xlabel('Unique tokens')
                         plt.ylabel('Token Frequencies')
                         plt.title(

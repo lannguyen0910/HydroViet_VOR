@@ -15,8 +15,8 @@ if __name__ == '__main__':
 
     # print(vocab)
     # print(vocab.freqs)
-    # print(vocab.most_common(6))
+    # print(vocab.most_common(50, '2'))
     # {'the': 50352, 'to': 23856, 'of': 19017, 'and': 17716, 'a': 17518, 'in': 16912}
     # vocab.plotting(top=10, types=['freqs', '1'])
-    vocab.plotting(top=10, types=['freqs', '2'])
-    vocab.plotting(top=10, types=['freqs', '3'])
+    vocab.plotting(top=10, types=['freqs', '3'], figsize=(15, 15))
+    # vocab.plotting(top=10, types=['freqs', '3'])
