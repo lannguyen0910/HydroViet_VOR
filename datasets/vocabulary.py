@@ -26,6 +26,11 @@ class VocabularyDataset(data.Dataset):
                  eos_token='<eos>',
                  unk_token='<unk>'):
 
+        self.init_token = init_token
+        self.pad_token = pad_token
+        self.eos_token = eos_token
+        self.unk_token = unk_token
+
         if tokenizer is None:
             self.tokenizer = TextTokenizer(steps=['normal'])
         else:
@@ -152,30 +157,29 @@ class VocabularyDataset(data.Dataset):
                     plt.ylabel('Token Frequencies')
                     plt.title(f'Top {top} frequencies distribution of 1_gram')
 
-                if 'n_grams' in self.tokenizer.steps:
-                    if '2' in types:
-                        count_dict = self.most_common(top, '2')
-                        new_count_dict = {convertTuple(
-                            k): v for k, v in count_dict.items()}
-                        # print('Count_dict 2: ', count_dict)
-                        barplot = plt.bar(list(new_count_dict.keys()),
-                                          list(new_count_dict.values()), color='green')
-                        plt.xlabel('Unique tokens')
-                        plt.ylabel('Token Frequencies')
-                        plt.title(
-                            f'Top {top} frequencies distribution of 2_gram')
+                if '2' in types:
+                    count_dict = self.most_common(top, '2')
+                    new_count_dict = {convertTuple(
+                        k): v for k, v in count_dict.items()}
+                    # print('Count_dict 2: ', count_dict)
+                    barplot = plt.bar(list(new_count_dict.keys()),
+                                      list(new_count_dict.values()), color='green')
+                    plt.xlabel('Unique tokens')
+                    plt.ylabel('Token Frequencies')
+                    plt.title(
+                        f'Top {top} frequencies distribution of 2_gram')
 
-                    if '3' in types:
-                        count_dict = self.most_common(top, '3')
-                        new_count_dict = {convertTuple(
-                            k): v for k, v in count_dict.items()}
+                if '3' in types:
+                    count_dict = self.most_common(top, '3')
+                    new_count_dict = {convertTuple(
+                        k): v for k, v in count_dict.items()}
 
-                        barplot = plt.bar(list(new_count_dict.keys()),
-                                          list(new_count_dict.values()), color='blue')
-                        plt.xlabel('Unique tokens')
-                        plt.ylabel('Token Frequencies')
-                        plt.title(
-                            f'Top {top} frequencies distribution of 3_gram')
+                    barplot = plt.bar(list(new_count_dict.keys()),
+                                      list(new_count_dict.values()), color='blue')
+                    plt.xlabel('Unique tokens')
+                    plt.ylabel('Token Frequencies')
+                    plt.title(
+                        f'Top {top} frequencies distribution of 3_gram')
 
         plt.show()
         # plt.legend()

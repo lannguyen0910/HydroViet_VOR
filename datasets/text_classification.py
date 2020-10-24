@@ -11,19 +11,25 @@ class TextClassificationDataset(Data.Dataset):
     """
 
     def __init__(self, root,
-                 # tokenizer=str.split(''),
+                 train,
+                 tokenizer=str.split(''),
                  n_samples=None,
                  shuffle=False,
                  skip_header=True
                  ):
+        super.__init__()
         self.root = root
+        self.train = train
         self.n_samples = n_samples
-        #self.tokenizer = tokenizer
+        self.tokenizer = tokenizer
         self.shuffle = shuffle
         self.skip_header = skip_header
         self.data = self.load_data()[0]
         self.n_categories = self.load_data()[1]
         self.text = self.load_data()[2]
+
+        self.category_idx = self.category_to_idx()
+        self.idx_category = {v: k for k, v in self.category_idx.items()}
 
     def load_data(self):
         data = []
@@ -44,6 +50,15 @@ class TextClassificationDataset(Data.Dataset):
         n_categories = list(set([line[0] for line in data]))
         text = list(set([text[1] for text in data]))
         return (data, n_categories, text)
+
+    def category_to_idx(self):
+        idx_dict = {}
+        idx = 0
+        for cat in self.n_categories:
+            idx_dict[cat] = idx
+            idx += 1
+
+        return idx_dict
 
     def count_text_per_cat(self):
         count_dict = {}
@@ -81,7 +96,7 @@ class TextClassificationDataset(Data.Dataset):
 
     def __getitem__(self, idx):
         category, text = self.data[idx]
-        tokens = text.split()
+        tokens = self.tokenizer.tokenize(text)
         return {'text': tokens, 'category': category}
 
     def __str__(self):
