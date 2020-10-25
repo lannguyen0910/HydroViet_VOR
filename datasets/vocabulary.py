@@ -1,7 +1,9 @@
+from typing import DefaultDict
 import torch.utils.data as data
 import sys
 from utils.nlp_tokenizer import TextTokenizer
 from tqdm import tqdm
+from collections import defaultdict
 import matplotlib.pyplot as plt
 
 sys.path.append('..')
@@ -21,6 +23,7 @@ class VocabularyDataset(data.Dataset):
     def __init__(self,
                  tokenizer=None,
                  max_length=None,
+                 min_freqs=None,
                  init_token='<sos>',
                  pad_token='<pad>',
                  eos_token='<eos>',
@@ -30,6 +33,7 @@ class VocabularyDataset(data.Dataset):
         self.pad_token = pad_token
         self.eos_token = eos_token
         self.unk_token = unk_token
+        self.freqs = {}
 
         if tokenizer is None:
             self.tokenizer = TextTokenizer(steps=['normal'])
@@ -39,6 +43,7 @@ class VocabularyDataset(data.Dataset):
         self.max_length = max_length  # Max length for vocab bag
         self.freqs = {}  # number of repeatations of a word
         self.vocab_size = 4
+        self.min_freqs = min_freqs
 
         self.special_tokens = {
             'init_token': init_token,
@@ -46,11 +51,34 @@ class VocabularyDataset(data.Dataset):
             'pad_token': pad_token,
             'unk_token': unk_token
         }
-        self.stoi = {
-            init_token: 0,
-            eos_token: 1,
-            pad_token: 2,
-            unk_token: 3
+
+        self.stoi = defaultdict(3)
+        self.stoi[pad_token] = 0
+        self.stoi[init_token] = 1
+        self.stoi[eos_token] = 2
+        self.stoi[unk_token] = 3
+
+        self.itos = {
+            0: pad_token,
+            1: init_token,
+            2: eos_token,
+            3: unk_token
+        }
+
+    def reset(self):
+        self.vocab_size = 4
+
+        self.stoi = defaultdict(3)
+        self.stoi[self.pad_token] = 0
+        self.stoi[self.init_token] = 1
+        self.stoi[self.eos_token] = 2
+        self.stoi[self.unk_token] = 3
+
+        self.itos = {
+            0: self.pad_token,
+            1: self.init_token,
+            2: self.eos_token,
+            3: self.unk_token
         }
 
     def build_vocab(self, data_set):
@@ -70,18 +98,43 @@ class VocabularyDataset(data.Dataset):
                             continue
 
                     self.stoi[token] = self.vocab_size  # index increase from 4
+                    self.itos[self.vocab_size] = token
                     self.vocab_size += 1
                     self.freqs[token] = 1
 
                 else:
                     self.freqs[token] += 1
-            #     break
-            # break
+
         self.freqs = {tok: freq for tok, freq in sorted(
             self.freqs.items(), key=lambda item: item[1], reverse=True)}
 
-        # for tok, freq in self.freqs.items():
-        #     print('Tok: ', tok)
+        # Vocab dataset only has min_freqs token
+        if self.min_freqs is not None and self.min_freqs > 1:
+            self.reset()
+            new_freq = {}
+            freq_list = list(self.freqs.items())
+            for tok, freq in freq_list:
+                if freq >= self.min_freqs:
+                    new_freq[tok] = freq
+                    self.stoi[tok] = self.vocab_size  # index increase from 4
+                    self.itos[self.vocab_size] = tok
+                    self.vocab_size += 1
+
+            self.freqs = new_freq
+
+        if self.max_length is not None and self.max_length < self.vocab_size:
+            self.reset()
+            new_freq = {}
+            freq_list = list(self.freqs.items())
+            for tok, freq in freq_list:
+                if self.vocab_size >= self.max_length:
+                    break
+                new_freq[tok] = freq
+                self.stoi[tok] = self.vocab_size  # index increase from 4
+                self.itos[self.vocab_size] = tok
+                self.vocab_size += 1
+
+            self.freqs = new_freq
 
         print('Done Bulding!')
 

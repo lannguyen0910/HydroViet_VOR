@@ -19,7 +19,7 @@ wordnet_lemmatizer = WordNetLemmatizer()
 
 
 class TextTokenizer:
-    def __init__(self, steps):
+    def __init__(self, steps=None, max_length=None):
         """
         Init class with list of steps
         """
@@ -36,6 +36,7 @@ class TextTokenizer:
                 self.wordnet_lemmatizer = wordnet_lemmatizer
 
         self.steps = steps
+        self.max_length = max_length
 
     def tokenize(self, sentence):
         """
@@ -106,14 +107,16 @@ class TextTokenizer:
         """
         Create list of bigrams and trigrams [(),(),(),...]
         """
-        bigrams = ngrams(tokens, 2)
-        trigrams = ngrams(tokens, 3)
         bi_tri_grams_list = []
+        if '2' in self.steps:
+            bigrams = ngrams(tokens, 2)
+            for ele in bigrams:
+                bi_tri_grams_list.append(ele)
 
-        for ele in bigrams:
-            bi_tri_grams_list.append(ele)
-        for ele in trigrams:
-            bi_tri_grams_list.append(ele)
+        if '3' in self.steps:
+            trigrams = ngrams(tokens, 3)
+            for ele in trigrams:
+                bi_tri_grams_list.append(ele)
 
         return bi_tri_grams_list
 
@@ -152,5 +155,11 @@ class TextTokenizer:
         if 'n_grams' in self.steps:
             n_grams = self.add_n_grams(results) if 'n_grams' in types else []
             results = results + n_grams
+
+        if self.max_length:
+            results = results[:self.max_length]
+
+        if len(results) == 0:
+            results.append('None')
 
         return results
