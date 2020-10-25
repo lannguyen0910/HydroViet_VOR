@@ -83,6 +83,7 @@ class VocabularyDataset(data.Dataset):
 
     def build_vocab(self, data_set):
         self.dataset = data_set
+
         self.data = data_set.text  # data is a list of text in text_dataset
         types = ['lower', 'remove_punctuations', 'snowball', 'remove_emojis'
                  'lemmatize', 'remove_tags', 'replace_consecutive', 'n_grams']
