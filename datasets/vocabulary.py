@@ -1,10 +1,11 @@
 from typing import DefaultDict
 import torch.utils.data as data
 import sys
+import matplotlib.pyplot as plt
+import dill
 from utils.nlp_tokenizer import TextTokenizer
 from tqdm import tqdm
 from collections import defaultdict
-import matplotlib.pyplot as plt
 
 sys.path.append('..')
 # print(sys.path)
@@ -237,6 +238,17 @@ class VocabularyDataset(data.Dataset):
 
         plt.show()
         # plt.legend()
+
+    def load(self, path):
+        assert isinstance(path, str), 'Path to load.pkl must be a str'
+        output = dill.load(open(path, 'rb'))
+        self = output  # instance of the class - vocab.load() is the output
+
+    def save(self, path):
+        assert isinstance(path, str), 'Path to load.pkl must be a str'
+        output = open(path, 'wb')
+        dill.dump(self, output)
+        output.close()
 
     def __len__(self) -> int:
         return self.vocab_size
