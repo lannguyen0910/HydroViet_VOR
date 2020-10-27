@@ -56,6 +56,40 @@ class Trainer(nn.Module):
             epoch_loss += loss.item()
             running_loss += loss.item()
 
-            if i % self.print_per_iter == 0 or i == len(self.train_loader) - 1 and i != 0:
-                print(f'\tIter: [{len(self.train_loader)*self.epoch + i + 1}/{self.num_iters}] \
+            iters = len(self.train_loader)*self.epoch + i + 1
+            if i % self.print_per_iter == 0:
+                print(f'\tIter: [{iters}/{self.num_iters}] \
                     | Traning Loss: {running_loss/self.print_per_iter:10.5f}')
+                running_loss = 0
+
+        return epoch_loss / len(self.train_loader)
+
+    def evaluate_per_epoch(self):
+        self.model.eval()
+        epoch_loss = 0.0
+        epoch_acc = 0.0
+        metric_dict = {}
+
+        with torch.no_grad():
+            for batch in self.val_loader:
+                loss, metrics = self.model.evaluate_step(batch)
+                epoch_loss += loss
+                metric_dict.update(metrics)
+
+        self.model.reset_metrics()
+        return epoch_loss/len(self.val_loader), metric_dict
+
+    def __str__(self) -> str:
+        title = '------------- Model Summary ---------------\n'
+        name = f'Name: {self.model.name}\n'
+        params = f'Number of params: {self.model.trainable_parameters}\n'
+        loss = f'Loss function: {self.criterion[:-2]} \n'
+        train_iter_per_epoch = f'Number of train iterations per epoch: {len(self.train_loader)}\n'
+        val_iter_per_epoch = f'Number of val iterations per epoch: {len(self.val_loader)}'
+
+        return title + name + params + loss + train_iter_per_epoch + val_iter_per_epoch
+
+    def print_forward_step(self):
+        self.model.eval()
+        outputs = self.model.print_forward_step()
+        print('Feedforward: output_shape: ', outputs.shape)
