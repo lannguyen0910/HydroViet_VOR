@@ -1,5 +1,7 @@
 .vscode
-datasets/__pycache__
-utils/__pycache__
+*/__pycache__
 pi.py
 *.csv
+trainingSample
+testSample
+trainingSet

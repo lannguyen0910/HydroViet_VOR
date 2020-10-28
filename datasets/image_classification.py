@@ -1,5 +1,5 @@
 import random
-import torch.utils.data as Data
+import torch.utils.data as data
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import csv
 from PIL import Image
 
 
-class ImageClassificationDataset(Data.Dataset):
+class ImageClassificationDataset(data.Dataset):
     def __init__(self, root,
                  transforms=None,
                  n_samples=None,
@@ -59,11 +59,11 @@ class ImageClassificationDataset(Data.Dataset):
 
     def plotting(self, figsize=(12, 12), types=['freqs']):
         """Plot distribution of classes with number"""
-        count_dict = self.count_img_per_class()
         # plt.style.use('dark_background')
         ax = plt.figure(figsize=figsize)
 
         if 'freqs' in types:
+            count_dict = self.count_img_per_class()
             barplot = plt.bar(list(count_dict.keys()), list(count_dict.values()), color=[
                 np.random.rand(3,) for _ in range(len(self.n_classes))])
 
@@ -89,8 +89,7 @@ class ImageClassificationDataset(Data.Dataset):
         img = Image.open(img_path).convert('RGB')
         assert len(img.getbands()) == 3, 'Gray image or sth'
 
-        if self.transforms:
-            root_name = os.path.dirname(self.root)
+        if self.transforms is not None:
             if self.mode == 'train':
                 img = self.transforms(img)['train']
             elif self.mode == 'val':

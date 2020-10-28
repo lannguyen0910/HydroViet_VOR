@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 
 class ClassificationAccuracyMetric:
@@ -24,10 +25,28 @@ class ClassificationAccuracyMetric:
         self.output_size = 0
 
     def value(self):
-        return self.correct/self.output_size
+        values = self.correct / self.output_size
+        print('Values: ', values)
+        if values.is_cuda:
+            values = values.cpu()
+        return {'Accuracy: ': np.around(values.numpy(), decimals=self.decimals)}
 
     def __str__(self) -> str:
         return f'Accuracy: {self.value()}'
 
     def __len__(self):
         return self.output_size
+
+
+if __name__ == '__main__':
+    accuracy = ClassificationAccuracyMetric()
+    output = [[1, 4, 2],
+              [5, 7, 4],
+              [2, 3, 0]]
+    target = [[1, 1, 0]]
+    output = torch.LongTensor(output)
+    target = torch.LongTensor(target)
+    accuracy.update(output, target)
+    dic = {}
+    dic.update(accuracy.value())
+    print(dic)

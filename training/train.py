@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from .checkpoint import CheckPoint, checkpoint
+from .checkpoint import CheckPoint, load
 
 
 class Trainer(nn.Module):
@@ -48,7 +48,7 @@ class Trainer(nn.Module):
         self.model.train()
         epoch_loss = 0.0
         running_loss = 0.0
-        for i, batch in enumerate(self.train_loader):
+        for i, batch in tqdm(enumerate(self.train_loader)):
             self.optimizer.zero_grad()
             loss = self.model.training_step(batch)
             loss.backward()
