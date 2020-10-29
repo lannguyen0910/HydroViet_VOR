@@ -9,7 +9,7 @@ import torch
 import torch.utils.data as data
 import torch.nn as nn
 import torchvision.models as models
-from torchsummary import summary
+# from torchsummary import summary
 
 
 if __name__ == '__main__':
@@ -34,13 +34,17 @@ if __name__ == '__main__':
     EPOCHS = 10
     lr = 1e-3
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam
     metrics = [ClassificationF1Score(
         N_CATEGORIES, average='macro'), ClassificationAccuracyMetric(decimals=3)]
-    model = resnet34()
-    summary(model, (3, 224, 224))
-    # model = BaselineModel(lr=lr, criterion=criterion, optimizer=optimizer,
-    #                       metrics=metrics, device=device)
+
+    resnet = resnet34(pretrained=True)
+    model = BaselineModel(criterion=criterion,
+                          metrics=metrics, n_labels=N_CATEGORIES,
+                          model=resnet, lr=lr,
+                          freeze=True, device=device)
+    model.freezing()
+    model.modify_last_layer()
+    print(model.trainable_parameters())
 
     chpoint = CheckPoint(save_per_epoch=2)
 
