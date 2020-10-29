@@ -13,7 +13,7 @@ class BaselineModel:
         self.freeze = freeze
         self.device = device
 
-        if device:
+        if device is not None:
             self.criterion.to(device)
 
         if not isinstance(metrics, list):
