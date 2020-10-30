@@ -87,17 +87,11 @@ class ImageClassificationDataset(data.Dataset):
 
         img_path = os.path.join(self.root, label)
         img = Image.open(img_path).convert('RGB')
+        # width, height = img.size
         assert len(img.getbands()) == 3, 'Gray image or sth'
 
         if self.transforms is not None:
-            if self.mode == 'train':
-                img = self.transforms(img)['train']
-            elif self.mode == 'val':
-                img = self.transforms(img)['val']
-            elif self.mode == 'test':
-                img = self.transforms(img)['test']
-            else:
-                print('Error! Please rename your folder')
+            img = self.transforms(img)
 
         return {'img': img,
                 'label': cls}  # cls_id
