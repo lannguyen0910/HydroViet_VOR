@@ -83,6 +83,9 @@ class VocabularyDataset(data.Dataset):
         }
 
     def build_vocab(self, data_set):
+        """
+        - Construct a vocab dataset base on text and tokenizer
+        """
         self.dataset = data_set
 
         self.data = data_set.text  # data is a list of text in text_dataset

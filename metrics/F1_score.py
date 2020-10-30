@@ -1,10 +1,15 @@
 import torch
 import numpy as np
+import random
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class ClassificationF1Score:
+    """
+    - F1-score in image classification (types: 'macro', 'micro', 'weighted')
+    """
+
     def __init__(self, labels, average='macro'):
         self.labels = labels  # int: number of labels
         self.average = average
@@ -37,7 +42,7 @@ class ClassificationF1Score:
             return 0
 
         if precision + recall > 0:
-            score = 2*precision*recall / (precision + recall + epsilon)
+            score = 2 * precision * recall / (precision + recall + epsilon)
         else:
             score = 0
 
@@ -63,6 +68,17 @@ class ClassificationF1Score:
         results = sum(results)*1.0 / self.labels
         return results
 
+    def compute_weighted(self):
+        weights = [abs(random.random()) for _ in range(self.labels - 1)]
+        weights = weights + [1 - sum(weights)]
+
+        results = [self.compute(self.count_dict[label] * weight)
+                   for label, weight in zip(range(self.labels), weights)]
+
+        results = sum(results*1.0) / self.labels
+
+        return results
+
     def reset(self):
         self.count_dict = {
             label: {
@@ -77,6 +93,8 @@ class ClassificationF1Score:
             score = self.compute_micro()
         elif self.average == 'macro':
             score = self.compute_macro()
+        elif self.average == 'weighted':
+            score = self.compute_weighted()
 
         return {'f1-score': score}
 

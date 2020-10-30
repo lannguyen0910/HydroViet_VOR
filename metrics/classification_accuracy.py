@@ -3,6 +3,10 @@ import numpy as np
 
 
 class ClassificationAccuracyMetric:
+    """
+    - Simple classification metrics to compute accuracy base on number of correct outputs
+    """
+
     def __init__(self, decimals=6):
         self.decimals = decimals
         self.reset()

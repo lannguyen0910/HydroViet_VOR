@@ -7,7 +7,13 @@ import csv
 
 class TextClassificationDataset(Data.Dataset):
     """
-    Handling a dataset.csv with input of (category, text)
+    - Handling a dataset.csv with input of (category, text)
+    - Args:
+            + root:                 path to csv file (str)
+            + tokenizer             preprocess text (default string split)
+            + n_samples             number of text to use (n_samples must <= max_samples)
+            + shuffle               shuffle text for randomness
+            + skip_header           remove header of csv file
     """
 
     def __init__(self, root,
@@ -52,6 +58,9 @@ class TextClassificationDataset(Data.Dataset):
         return (data, n_categories, text)
 
     def category_to_idx(self):
+        """
+        - From category to index
+        """
         idx_dict = {}
         idx = 0
         for cat in self.n_categories:
@@ -61,6 +70,9 @@ class TextClassificationDataset(Data.Dataset):
         return idx_dict
 
     def count_text_per_cat(self):
+        """
+        - How many texts has same category
+        """
         count_dict = {}
         for cat, text in self.data:
             if cat in count_dict.keys():
@@ -71,7 +83,9 @@ class TextClassificationDataset(Data.Dataset):
         return count_dict
 
     def plotting(self, figsize=(12, 12), types=['freqs']):
-        """Plot distribution of classes with number"""
+        """
+        Visualize distribution of classes with frequencies
+        """
         count_dict = self.count_text_per_cat()
         # plt.style.use('dark_background')
         ax = plt.figure(figsize=figsize)
