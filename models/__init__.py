@@ -1,1 +1,2 @@
-from .baseline_model import BaselineModel
+from .baseline import BaselineModel
+from .classifier import Classifier

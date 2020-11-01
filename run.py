@@ -1,3 +1,4 @@
+from models.classifier import Classifier
 from random import shuffle
 from numpy.lib.npyio import save
 from torchvision import transforms
@@ -6,6 +7,7 @@ from tqdm import tqdm
 from datasets.transform import transforming
 from datasets.image_classification import ImageClassificationDataset
 from utils.getter import *
+
 import torch
 import torch.utils.data as data
 import torch.nn as nn
@@ -51,15 +53,14 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     metrics = [ClassificationF1Score(
         N_CATEGORIES, average='macro'), ClassificationAccuracyMetric(decimals=3)]
+    optimizer = torch.optim.Adam
 
     resnet = resnet34(pretrained=True)
-    model = BaselineModel(criterion=criterion,
-                          metrics=metrics, n_labels=N_CATEGORIES,
-                          model=resnet, lr=lr,
-                          freeze=True, device=device)
-    model.freezing()
+    model = Classifier(backbone=resnet, n_classes=N_CATEGORIES, optimizer=optimizer, criterion=criterion, metrics=metrics,
+                       lr=1e-4, freeze=True, device=None, optim_params=None)
     model.modify_last_layer()
-    print(model.trainable_parameters())
+    print('Number of trainable parameters in model: ',
+          model.trainable_parameters())
 
     chpoint = CheckPoint(save_per_epoch=2)
 
