@@ -36,7 +36,7 @@ class Normalize(object):
 
 class Denormalize(object):
     """
-    Denormalize a tensor image and return to numpy type.
+    Denormalize a tensor image and return to numpy type to display image.
     """
 
     def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], **kwargs):
