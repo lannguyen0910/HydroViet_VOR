@@ -82,19 +82,45 @@ class ImageClassificationDataset(data.Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        label, cls = self.data[idx]
-        #cls_id = self.class_idxes[cls]
+        image_name, class_name = self.data[idx]
+        label = self.class_idxes[class_name]
 
-        img_path = os.path.join(self.root, label)
+        img_path = os.path.join(self.root, image_name)
         img = Image.open(img_path).convert('RGB')
         # width, height = img.size
         assert len(img.getbands()) == 3, 'Gray image or sth'
 
         if self.transforms is not None:
-            img = self.transforms(img)
+            results = self.transforms(img=img, category=label)
+            img = results['img']
+            label = results['category']
 
         return {'img': img,
-                'label': cls}  # cls_id
+                'label': label}  # cls_id
+
+    def visualize(self, img, label, figsize=(20, 20)):
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.imshow(img)
+
+        plt.title(self.n_classes[label])
+        plt.show()
+
+    def visualize_image(self, idx=None, figsize=(20, 20)):
+        """
+        Visualize an image by passing idx
+        """
+        if idx is None:
+            idx = random.randint(0, len(self.data))
+
+        item = self.__getitem__(idx)
+        img = item['img']
+        label = item['label']
+
+        # denormalize to display image
+        results = self.transforms.Denormalize(
+            img=img, box=None, category=label)
+        img, label = results['img'], results['category']
+        self.visualize(img, label, figsize=figsize)
 
     def __str__(self):
         title = 'Dataset for Image Classification\n\n'

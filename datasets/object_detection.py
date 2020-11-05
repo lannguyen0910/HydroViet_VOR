@@ -11,7 +11,7 @@ from PIL import Image
 from augmentation.transforms import Compose
 
 
-class ObjectDetection(data.Dataset):
+class ObjectDetectionDataset(data.Dataset):
     """
     - Object detection for COCO dataset Format
     - Bounding Box: (x1, y1, x2, y2)
@@ -113,7 +113,7 @@ class ObjectDetection(data.Dataset):
         plt.legend()
         plt.show()
 
-    def visualize(self, img, bboxes, categories, figsize=(12, 12)):
+    def visualize(self, img, boxes, categories, figsize=(12, 12)):
         """
         Inference image with bounding boxes and categories
         """
@@ -122,8 +122,8 @@ class ObjectDetection(data.Dataset):
         # Load image
         ax.imshow(img)
 
-        # create bboxes and categories by adding rectanges and texts
-        for box, category in zip(bboxes, categories):
+        # create boxes and categories by adding rectanges and texts
+        for box, category in zip(boxes, categories):
             color = np.random.rand(3,)
             x, y, w, h = box
             rect = patches.Rectangle(
@@ -142,20 +142,20 @@ class ObjectDetection(data.Dataset):
             + param batch: an iterable of N sets from __getitem__()
             + return: a tensor of images, lists of varying-size tensors of bounding boxes, labels, and difficulties
         """
-        images, bboxes, categories = [], [], []
+        images, boxes, categories = [], [], []
 
         for b in batch:
             images.append(b['img'])
-            bboxes.append(b['bboxes'])
-            categories.append(b['classes'])
+            boxes.append(b['box'])
+            categories.append(b['category'])
 
         images = torch.stack(images, dim=0)
 
         # tensor (N, 3, 300, 300), 3 lists of N tensors each
         return {
             'imgs': images,
-            'bboxes': bboxes,
-            'classes': categories
+            'boxes': boxes,
+            'categories': categories
         }
 
     def __len__(self):
@@ -171,16 +171,17 @@ class ObjectDetection(data.Dataset):
         img_anno_list = [i for i in list(self.data['annotations'])
                          if i['image_id'] == img_item_id]
         img_path = os.path.join(self.root, img_item_name)
-        bboxes = np.floor(np.array([i['bbox'] for i in img_anno_list]))
-        categories = np.array([i['category_id'] for i in img_anno_list])
+        box = np.floor(np.array([i['bbox'] for i in img_anno_list]))
+        category = np.array([i['category_id'] for i in img_anno_list])
 
         img = Image.open(img_path)
-        img, bboxes, categories = self.transforms(img, bboxes, categories)
+        results = self.transforms(img, box, category)
+        img, box, category = results['img'], results['box'], results['category']
 
         return {
             'img': img,
-            'bboxes': bboxes,
-            'classes': categories
+            'box': box,
+            'category': category
         }
 
     def visualize_image(self, idx=None, figsize=(20, 20)):
@@ -189,13 +190,14 @@ class ObjectDetection(data.Dataset):
 
         item = self.__getitem__(idx)
         img = item['img']
-        bboxes = item['bboxes']
-        categories = item['classes']
+        box = item['box']
+        category = item['category']
 
         # Denormalize in transforms
-        img, bboxes, categories = self.transforms.Denormalize(
-            img=img, bboxes=bboxes, classes=categories)
-        self.visualize(img, bboxes, categories, figsize)
+        results = self.transforms.Denormalize(
+            img=img, box=box, category=category)
+        img, box, category = results['img'], results['box'], results['category']
+        self.visualize(img, box, category, figsize)
 
     def __str__(self) -> str:
         title = 'Dataset for Object Detection\n\n'

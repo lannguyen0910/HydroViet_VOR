@@ -2,12 +2,11 @@ from __future__ import division
 from PIL import Image
 from collections import Iterable
 import torch
-import math
-import sys
 import random
 import numpy as np
 import torchvision.transforms.functional as F
 
+# Source of torch.nn.functional
 _pil_interpolation_to_str = {
     Image.NEAREST: 'PIL.Image.NEAREST',
     Image.BILINEAR: 'PIL.Image.BILINEAR',
@@ -31,7 +30,17 @@ class Normalize(object):
     def __call__(self, img, **kwargs):
         new_img = F.normalize(img, mean=self.mean,
                               std=self.std, inplace=self.inplace)
-        return new_img, kwargs['bboxes'], kwargs['classes']
+        results = {
+            'img': new_img,
+            'box': kwargs['box'],
+            'category': kwargs['category'],
+            'mask': None
+        }
+
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 
 
 class Denormalize(object):
@@ -43,7 +52,7 @@ class Denormalize(object):
         self.mean = mean
         self.std = std
 
-    def __call__(self, img, bboxes, classes):
+    def __call__(self, img, **kwargs):
         """
         Args: 
             img_tensor (Tensor): image of size (C, H, W) to be normalized
@@ -54,26 +63,47 @@ class Denormalize(object):
         mean = np.array(self.mean)
         std = np.array(self.std)
 
-        bboxes = bboxes.numpy()
-        classes = classes.numpy()
-
         img = img.numpy().squeeze().transpose(1, 2, 0)
         img = (img * std + mean)
         img = np.clip(img, 0, 1)
 
-        return img, bboxes, classes
+        results = {
+            'img': img,
+            'box': kwargs['box'],
+            'category': kwargs['category'],
+            'mask': None
+        }
+
+        return results
 
 
 class ToTensor(object):
+    """
+    Image from numpy to tensor
+    """
+
     def __init__(self):
         pass
 
-    def __call__(self, img, bboxes,  classes, **kwargs):
-        img_tensor = F.to_tensor(img)
-        bboxes = torch.FloatTensor(bboxes)
-        classes = torch.LongTensor(classes)
+    def __call__(self, img, **kwargs):
+        img = F.to_tensor(img)
 
-        return img_tensor, bboxes, classes
+        results = {
+            'img': img,
+            'box': kwargs['box'],
+            'category': kwargs['category'],
+            'mask': None
+        }
+
+        if kwargs['box'] is not None:
+            box = torch.FloatTensor(kwargs['box'])
+            results['box'] = box
+
+        if kwargs['category'] is not None:
+            category = torch.LongTensor(kwargs['category'])
+            results['category'] = category
+
+        return results
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + '()'
@@ -90,15 +120,25 @@ class Resize(object):
         self.size = size
         self.interpolation = interpolation
 
-    def __call__(self, img, bboxes, **kwargs):
-        new_img = F.resize(img, self.size)
-        np_bboxes = np.array(bboxes)
-        old_dims = np.array([img.width, img.height, img.width, img.height])
-        new_dims = np.array([self.size[1], self.size[0],
-                             self.size[1], self.size[0]])
-        new_bboxes = np.floor((np_bboxes / old_dims) * new_dims)
+    def __call__(self, img, box=None, **kwargs):
+        new_img = F.resize(img, self.size, self.interpolation)
 
-        return new_img, new_bboxes, kwargs['classes']
+        if box is not None:
+            np_box = np.array(box)
+            old_dims = np.array([img.width, img.height, img.width, img.height])
+            new_dims = np.array([self.size[1], self.size[0],
+                                 self.size[1], self.size[0]])
+
+            box = np.floor((np_box / old_dims) * new_dims)
+
+        results = {
+            'img': new_img,
+            'box': box,
+            'category': kwargs['category'],
+            'mask': None
+        }
+
+        return results
 
     def __repr__(self):
         interpolate_str = _pil_interpolation_to_str[self.interpolation]
@@ -107,33 +147,41 @@ class Resize(object):
 
 class RandomHorizontalFlip(object):
     """
-    Horizontally Flip Image and bounding boxes
+    - Horizontally Flip Image and bounding boxes + Mask
     """
 
     def __init__(self, ratio=0.5):
         self.ratio = ratio
 
-    def __call__(self, img, bboxes, **kwargs):
+    def __call__(self, img, box=None, **kwargs):
         if random.random() < self.ratio:
             # Flip img
             img = F.hflip(img)
 
             # Flip bboxes
-            img_center = np.array(np.array(img).shape[:2]) / 2
-            img_center = np.hstack((img_center, img_center))
+            if box is not None:
+                img_center = np.array(np.array(img).shape[:2]) / 2
+                img_center = np.hstack((img_center, img_center))
 
-            bboxes[:, [0, 2]] += 2*(img_center[[0, 2]] - bboxes[:, [0, 2]])
+                box[:, [0, 2]] += 2*(img_center[[0, 2]] - box[:, [0, 2]])
 
-            box_w = abs(bboxes[:, 0] - bboxes[:, 2])
-            bboxes[:, 0] -= box_w
-            bboxes[:, 2] += box_w
+                box_w = abs(box[:, 0] - box[:, 2])
+                box[:, 0] -= box_w
+                box[:, 2] += box_w
 
-        return img, bboxes, kwargs['classes']
+        results = {
+            'img': img,
+            'box': box,
+            'category': kwargs['category'],
+            'mask': None
+        }
+
+        return results
 
 
 class Compose(object):
     """
-    Custom Transform class contain all method like Resize, ToTensor...
+    - Custom Transform class composes all method like Resize, ToTensor...
     """
 
     def __init__(self, transform_list=None):
@@ -148,9 +196,12 @@ class Compose(object):
         if not isinstance(self.transform_list, list):
             self.transform_list = list(self.transform_list)
 
-    def __call__(self, img, bboxes, classes):
+    def __call__(self, img, box=None, category=None, mask=None):
         for transform in self.transform_list:
-            img, bboxes, classes = transform(
-                img=img, bboxes=bboxes, classes=classes)
+            results = transform(img=img, box=box, category=category, mask=mask)
+            img = results['img']
+            box = results['box']
+            category = results['category']
+            mask = results['mask']
 
-        return img, bboxes, classes
+        return results
