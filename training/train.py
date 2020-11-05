@@ -29,14 +29,16 @@ class Trainer(nn.Module):
             self.print_per_iter = int(len(self.train_loader) / 10)
 
         print(f'Training for {num_epochs} ...')
-        for epoch in range(num_epochs):
+        for epoch in tqdm(range(num_epochs)):
             self.epoch = epoch
             train_loss = self.train_per_epoch()
-            print(f'Epoch: [{epoch + 1}|{num_epochs}]')
+            print(
+                f'Epoch: [{epoch + 1}/{num_epochs}] | Train Loss: {train_loss}')
 
             if epoch % self.evaluate_per_epoch == 0 and epoch + 1 >= self.evaluate_per_epoch:
-                val_loss, val_metrics = self.evaluation_per_epoch()
-                print(f'Eval: Val Loss: {val_loss:10.5f} |', end=' ')
+                val_loss, val_acc, val_metrics = self.evaluation_per_epoch()
+                print(
+                    f'Eval: Val Loss: {val_loss:10.5f} | Val Acc: {val_acc:10.5f} |', end=' ')
                 for metric, score in val_metrics.items():
                     print(f'{metric}: {score}', end='|')
                 print('\n')
@@ -64,6 +66,17 @@ class Trainer(nn.Module):
 
         return epoch_loss / len(self.train_loader)
 
+    def inference_per_batch(self, test_loader):
+        self.model.eval()
+        results = []
+        with torch.no_grad():
+            for batch in test_loader:
+                outputs = self.model.inference_step(batch)
+                for i in outputs:
+                    results.append(i)
+
+        return results
+
     def evaluate_per_epoch(self):
         self.model.eval()
         epoch_loss = 0.0
@@ -72,12 +85,13 @@ class Trainer(nn.Module):
 
         with torch.no_grad():
             for batch in self.val_loader:
-                loss, metrics = self.model.evaluate_step(batch)
+                loss, accuracy, metrics = self.model.evaluate_step(batch)
                 epoch_loss += loss
+                epoch_acc += accuracy
                 metric_dict.update(metrics)
 
         self.model.reset_metrics()
-        return epoch_loss/len(self.val_loader), metric_dict
+        return epoch_loss / len(self.val_loader), epoch_acc / len(self.val_loader), metric_dict
 
     def __str__(self) -> str:
         title = '------------- Model Summary ---------------\n'
@@ -91,5 +105,5 @@ class Trainer(nn.Module):
 
     def print_forward_step(self):
         self.model.eval()
-        outputs = self.model.print_forward_step()
+        outputs = self.model.forward_step()
         print('Feedforward: output_shape: ', outputs.shape)

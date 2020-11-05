@@ -59,17 +59,19 @@ class Classifier(BaselineModel):
     def evaluate_step(self, batch):
         inputs = batch["img"]
         targets = batch["label"]
+        accuracy = 0
         if self.device:
             inputs = inputs.to(self.device)
             targets = targets.to(self.device)
         outputs = self(inputs)  # batchsize, label_dim
         loss = self.criterion(outputs, targets)
 
+        accuracy += (outputs == targets).float().sum()
         metric_dict = self.update_metrics(outputs, targets)
 
-        return loss, metric_dict
+        return loss, accuracy, metric_dict
 
-    def print_forward_test(self):
+    def forward_test(self):
         inputs = torch.rand(1, 3, 224, 224)
         if self.device:
             inputs = inputs.to(self.device)
