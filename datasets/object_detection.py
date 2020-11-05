@@ -1,13 +1,14 @@
 import torch
-import torch.nn as nn
-import torch.nn.utils as data
+import torch.utils.data as data
 import os
 import random
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
 from PIL import Image
+from augmentation.transforms import Compose
 
 
 class ObjectDetection(data.Dataset):
@@ -24,7 +25,7 @@ class ObjectDetection(data.Dataset):
         self.anno_path = anno_path
         _, self.ext = os.path.splitext(anno_path)
         self.shuffle = shuffle
-        self.transforms = transforms
+        self.transforms = transforms if transforms is not None else Compose()
         self.max_samples = max_samples
         self.data = self.load_annos()
         self.imgs = self.load_images()
@@ -33,16 +34,18 @@ class ObjectDetection(data.Dataset):
         """
         Load data from annotation file
         """
+        data = None
         with open(self.anno_path, 'r') as file:
             if self.ext == '.json':
                 data = json.load(file)
 
         # Label start at index 0
-        for anno in data['annotations']:
-            anno['category_id'] -= 1
+        if data is not None:
+            for anno in data['annotations']:
+                anno['category_id'] -= 1
 
-        for anno in data['categories']:
-            anno['id'] -= 1
+            for anno in data['categories']:
+                anno['id'] -= 1
 
         return data
 
@@ -98,7 +101,8 @@ class ObjectDetection(data.Dataset):
         ax = plt.figure(figsize=figsize)
         if 'freqs' in types:
             count_dict = self.count_freq(types=1)
-            plt.title('Category Distribution!')
+            plt.title(
+                f'Total keys in count_dict: {sum(list(count_dict.values()))}')
             barh = plt.barh(list(count_dict.keys()), list(count_dict.values()), color=[
                             np.random.rand(3,) for _ in range(self.categories)])
             for rect in barh:
@@ -147,6 +151,7 @@ class ObjectDetection(data.Dataset):
 
         images = torch.stack(images, dim=0)
 
+        # tensor (N, 3, 300, 300), 3 lists of N tensors each
         return {
             'imgs': images,
             'bboxes': bboxes,
@@ -191,3 +196,10 @@ class ObjectDetection(data.Dataset):
         img, bboxes, categories = self.transforms.Denormalize(
             img=img, bboxes=bboxes, classes=categories)
         self.visualize(img, bboxes, categories, figsize)
+
+    def __str__(self) -> str:
+        title = 'Dataset for Object Detection\n\n'
+        images = f'Number of image sample: {len(self.imgs)}\n'
+        categories = f'Number of category: {len(self.categories)}\n'
+
+        return title + images + categories
