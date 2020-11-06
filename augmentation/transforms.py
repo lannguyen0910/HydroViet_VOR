@@ -114,7 +114,7 @@ class Resize(object):
     - Resize a PIL image with bboxes and size
     """
 
-    def __init__(self, size, interpolation=Image.BILINEAR):
+    def __init__(self, size=(224, 224), interpolation=Image.BILINEAR, **kwargs):
         assert isinstance(size, int) or (
             isinstance(size, Iterable) and len(size) == 2)
         self.size = size
@@ -156,7 +156,7 @@ class RandomHorizontalFlip(object):
     def __call__(self, img, box=None, **kwargs):
         if random.random() < self.ratio:
             # Flip img
-            img = F.hflip(img)
+            img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
             # Flip bboxes
             if box is not None:

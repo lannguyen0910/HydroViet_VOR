@@ -32,7 +32,7 @@ class Classifier(BaselineModel):
 
     def training_step(self, batch):
         inputs = batch["img"]
-        targets = batch["label"]
+        targets = batch["category"]
         inputs = torch.FloatTensor(inputs)
 
         target = [int(i) for i in targets]
@@ -58,7 +58,7 @@ class Classifier(BaselineModel):
 
     def evaluate_step(self, batch):
         inputs = batch["img"]
-        targets = batch["label"]
+        targets = batch["category"]
         accuracy = 0
         if self.device:
             inputs = inputs.to(self.device)

@@ -1,4 +1,5 @@
 import random
+import torch
 import torch.utils.data as data
 import os
 import numpy as np
@@ -83,26 +84,26 @@ class ImageClassificationDataset(data.Dataset):
 
     def __getitem__(self, idx):
         image_name, class_name = self.data[idx]
-        label = self.class_idxes[class_name]
+        category = self.class_idxes[class_name]
 
         img_path = os.path.join(self.root, image_name)
         img = Image.open(img_path).convert('RGB')
         # width, height = img.size
-        assert len(img.getbands()) == 3, 'Gray image or sth'
+        assert len(img.getbands()) == 3, 'Gray image not allow'
 
         if self.transforms is not None:
-            results = self.transforms(img=img, category=label)
+            results = self.transforms(img=img, category=[category])
             img = results['img']
-            label = results['category']
+            category = results['category']
 
         return {'img': img,
-                'label': label}  # cls_id
+                'category': category}  # cls_id
 
-    def visualize(self, img, label, figsize=(20, 20)):
+    def visualize(self, img, category, figsize=(20, 20)):
         fig, ax = plt.subplots(figsize=figsize)
         ax.imshow(img)
 
-        plt.title(self.n_classes[label])
+        plt.title(self.n_classes[category])
         plt.show()
 
     def visualize_image(self, idx=None, figsize=(20, 20)):
@@ -114,13 +115,23 @@ class ImageClassificationDataset(data.Dataset):
 
         item = self.__getitem__(idx)
         img = item['img']
-        label = item['label']
+        category = item['category']
 
         # denormalize to display image
         results = self.transforms.Denormalize(
-            img=img, box=None, category=label)
-        img, label = results['img'], results['category']
-        self.visualize(img, label, figsize=figsize)
+            img=img, box=None, category=category)
+        img, category = results['img'], results['category']
+        self.visualize(img, category, figsize=figsize)
+
+    def collate_fn(self, batch):
+        images = torch.stack([b['img'] for b in batch], dim=0)
+        categories = torch.Tensor([b['category']
+                                   for b in batch]).to(dtype=torch.LongTensor)
+
+        return {
+            'imgs': images,
+            'categories': categories
+        }
 
     def __str__(self):
         title = 'Dataset for Image Classification\n\n'
