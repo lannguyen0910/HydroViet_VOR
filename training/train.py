@@ -5,7 +5,7 @@ from .checkpoint import CheckPoint, load
 
 
 class Trainer(nn.Module):
-    def __init__(self, model, train_loader, val_loader, checkpoint=None, evaluate_per_epoch=1):
+    def __init__(self, model, train_loader, val_loader, **kwargs):
         super().__init__()
         self.model = model
         self.train_loader = train_loader
@@ -13,8 +13,7 @@ class Trainer(nn.Module):
         self.optimizer = model.optimizer
         self.criterion = model.criterion
         self.metrics = model.metrics  # list
-        self.checkpoint = checkpoint
-        self.evaluate_per_epoch = evaluate_per_epoch
+        self.set_attribute(kwargs)
 
     def fit(self, num_epochs=10, print_per_iter=None):
         self.num_epochs = num_epochs
@@ -107,3 +106,9 @@ class Trainer(nn.Module):
         self.model.eval()
         outputs = self.model.forward_step()
         print('Feedforward: output_shape: ', outputs.shape)
+
+    def set_attribute(self, kwargs):
+        self.checkpoint = None
+        self.evaluate_epoch = 1
+        for i, j in kwargs.items():
+            setattr(self, i, j)

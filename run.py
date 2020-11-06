@@ -12,30 +12,36 @@ import torch
 import torch.utils.data as data
 import torch.nn as nn
 import torchvision.models as models
-import torchvision.transforms as transforms
 # from torchsummary import summary
 
 img_size = (224, 224)
-mean = [0.485, 0.456, 0.406]
-std = [0.229, 0.224, 0.225]
-normalize = transforms.Normalize(mean=mean, std=std)
-transform_train = transforms.Compose([
-    transforms.Resize(img_size),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    normalize
+transforms = Compose([
+    Resize(img_size),
+    ToTensor(),
+    Normalize()
 ])
+# mean = [0.485, 0.456, 0.406]
+# std = [0.229, 0.224, 0.225]
+# normalize = transforms.Normalize(mean=mean, std=std)
+# transform_train = transforms.Compose([
+#     transforms.Resize(img_size),
+#     transforms.RandomHorizontalFlip(),
+#     transforms.ToTensor(),
+#     normalize
+# ])
 
-transform_val = transforms.Compose([
-    transforms.Resize(img_size),
-    transforms.ToTensor(),
-    normalize
-])
+# transform_val = transforms.Compose([
+#     transforms.Resize(img_size),
+#     transforms.ToTensor(),
+#     normalize
+# ])
+
+
 if __name__ == '__main__':
     train_set = ImageClassificationDataset(root='trainingSet/trainingSet',
-                                           transforms=transform_train, shuffle=True)
+                                           transforms=transforms, shuffle=True)
     val_set = ImageClassificationDataset(root='trainingSample',
-                                         transforms=transform_val,  shuffle=True)
+                                         transforms=transforms,  shuffle=True)
     print('Train set: ', train_set)
     print('Val set: ', val_set)
     N_CATEGORIES = len(train_set.n_classes)
@@ -51,8 +57,7 @@ if __name__ == '__main__':
     EPOCHS = 10
     lr = 1e-3
     criterion = nn.CrossEntropyLoss()
-    metrics = [ClassificationF1Score(
-        N_CATEGORIES, average='macro'), ClassificationAccuracyMetric(decimals=3)]
+    metrics = [ClassificationAccuracyMetric(decimals=3)]
     optimizer = torch.optim.Adam
 
     resnet = resnet34(pretrained=True)
