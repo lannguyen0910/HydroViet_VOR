@@ -34,7 +34,7 @@ class Trainer(nn.Module):
             print(
                 f'Epoch: [{epoch + 1}/{num_epochs}] | Train Loss: {train_loss}')
 
-            if epoch % self.evaluate_per_epoch == 0 and epoch + 1 >= self.evaluate_per_epoch:
+            if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
                 val_loss, val_acc, val_metrics = self.evaluation_per_epoch()
                 print(
                     f'Eval: Val Loss: {val_loss:10.5f} | Val Acc: {val_acc:10.5f} |', end=' ')

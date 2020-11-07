@@ -76,5 +76,5 @@ if __name__ == '__main__':
     chpoint = CheckPoint(save_per_epoch=2)
 
     trainer = Trainer(model, train_loader, val_loader,
-                      checkpoint=chpoint, evaluate_per_epoch=2)
+                      checkpoint=chpoint, evaluate_epoch=2)
     trainer.fit(num_epochs=EPOCHS, print_per_iter=10)
