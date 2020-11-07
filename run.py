@@ -66,9 +66,9 @@ if __name__ == '__main__':
     metrics = [ClassificationAccuracyMetric(decimals=3)]
     optimizer = torch.optim.Adam
 
-    resnet = resnet34(pretrained=True)
+    resnet = resnet34(pretrained=True).to(device)
     model = Classifier(backbone=resnet, n_classes=N_CATEGORIES, optimizer=optimizer, criterion=criterion, metrics=metrics,
-                       lr=1e-4, freeze=True, device=None, optim_params=None)
+                       lr=1e-4, freeze=True, device=device, optim_params=None)
     model.modify_last_layer()
     print('Number of trainable parameters in model: ',
           model.trainable_parameters())

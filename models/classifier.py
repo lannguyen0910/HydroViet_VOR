@@ -28,7 +28,7 @@ class Classifier(BaselineModel):
                                   out_features=self.n_classes)
 
         if self.device is not None:
-            self.model.fc.to(self.device)
+            self.model.to(self.device)
 
     def training_step(self, batch):
         inputs = batch["img"]
@@ -37,7 +37,7 @@ class Classifier(BaselineModel):
 
         target = [int(i) for i in targets]
         targets = torch.LongTensor(target)
-        if self.device:
+        if self.device is not None:
             inputs = inputs.to(self.device)
             targets = targets.to(self.device)
 

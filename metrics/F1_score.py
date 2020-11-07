@@ -16,17 +16,17 @@ class ClassificationF1Score:
         self.reset()
 
     def update(self, outputs, targets):
-        print('Output: ', outputs)
-        print('Target: ', targets)
+        # print('Output: ', outputs)
+        # print('Target: ', targets)
         pred = torch.argmax(outputs, 1)
-        print('Output after argmax: ', pred)
+        # print('Output after argmax: ', pred)
         pred = pred.cpu().numpy()
         target = targets.cpu().numpy()
-        print('Target shape: ', target.shape)
+        # print('Target shape: ', target.shape)
 
         for pd, gt in zip(pred, target):
-            print('Pd: ', pd)
-            print('Gt: ', gt)
+            # print('Pd: ', pd)
+            # print('Gt: ', gt)
             self.count_dict[gt]['total_gt'] += 1
             self.count_dict[pd]['total_p'] += 1
             if pd == gt:
