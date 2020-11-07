@@ -35,7 +35,7 @@ class Trainer(nn.Module):
                 f'Epoch: [{epoch + 1}/{num_epochs}] | Train Loss: {train_loss}')
 
             if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
-                val_loss, val_acc, val_metrics = self.evaluation_per_epoch()
+                val_loss, val_acc, val_metrics = self.evaluate_per_epoch()
                 print(
                     f'Eval: Val Loss: {val_loss:10.5f} | Val Acc: {val_acc:10.5f} |', end=' ')
                 for metric, score in val_metrics.items():
@@ -49,6 +49,7 @@ class Trainer(nn.Module):
         self.model.train()
         epoch_loss = 0.0
         running_loss = 0.0
+
         for i, batch in enumerate(self.train_loader):
             self.optimizer.zero_grad()
             loss = self.model.training_step(batch)

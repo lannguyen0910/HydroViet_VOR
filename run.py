@@ -2,7 +2,7 @@ from models.classifier import Classifier
 from random import shuffle
 from numpy.lib.npyio import save
 # from torchvision import transforms
-from torchvision.models.resnet import ResNet,  resnet34
+from torchvision.models.resnet import ResNet,  resnet34, resnet50
 from tqdm import tqdm
 # from datasets.transform import transforming
 from datasets.image_classification import ImageClassificationDataset
@@ -60,13 +60,13 @@ if __name__ == '__main__':
     # print('Train images: ', trainimages)
     # print('Train_label: ', trainlabels)
 
-    EPOCHS = 10
+    EPOCHS = 1000
     lr = 1e-3
     criterion = nn.CrossEntropyLoss()
     metrics = [ClassificationAccuracyMetric(decimals=3)]
     optimizer = torch.optim.Adam
 
-    resnet = resnet34(pretrained=True).to(device)
+    resnet = resnet50(pretrained=True).to(device)
     model = Classifier(backbone=resnet, n_classes=N_CATEGORIES, optimizer=optimizer, criterion=criterion, metrics=metrics,
                        lr=1e-4, freeze=True, device=device, optim_params=None)
     model.modify_last_layer()
@@ -76,5 +76,5 @@ if __name__ == '__main__':
     chpoint = CheckPoint(save_per_epoch=2)
 
     trainer = Trainer(model, train_loader, val_loader,
-                      checkpoint=chpoint, evaluate_epoch=2)
+                      checkpoint=chpoint, evaluate_epoch=100)
     trainer.fit(num_epochs=EPOCHS, print_per_iter=10)

@@ -61,10 +61,12 @@ class Classifier(BaselineModel):
         inputs = batch["img"]
         targets = batch["category"]
         accuracy = 0
+
         if self.device:
             inputs = inputs.to(self.device)
             targets = targets.to(self.device)
-        outputs = self(inputs)  # batchsize, label_dim
+
+        outputs = self(inputs)  # batch_size, category_dim
         loss = self.criterion(outputs, targets)
 
         accuracy += (outputs == targets).float().sum()

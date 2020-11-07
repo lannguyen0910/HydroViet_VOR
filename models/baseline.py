@@ -25,8 +25,9 @@ class BaselineModel(nn.Module):
                     param[key] = self.optim_params[key]
 
     def unfreeze(self):
-        for params in self.parameters():
-            params.requires_grad = True
+        if not self.freeze:
+            for params in self.parameters():
+                params.requires_grad = True
 
     def trainable_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
