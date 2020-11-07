@@ -12,23 +12,24 @@ class Classifier(BaselineModel):
         self.set_optimizer_params()
         self.n_classes = n_classes
 
-        if self.freeze:
-            for params in self.model.parameters():
-                params.requires_grad = False
-
         if self.device is not None:
+            self.model.to(self.device)
             self.criterion.to(self.device)
 
     def forward(self, x):
         return self.model(x)
 
     def modify_last_layer(self):
+        if self.freeze:
+            for params in self.model.parameters():
+                params.requires_grad = False
+
         in_features = self.model.fc.in_features
         self.model.fc = nn.Linear(in_features=in_features,
                                   out_features=self.n_classes)
 
         if self.device is not None:
-            self.model.to(self.device)
+            self.model.fc.to(self.device)
 
     def training_step(self, batch):
         inputs = batch["img"]

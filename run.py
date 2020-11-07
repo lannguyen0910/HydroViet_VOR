@@ -51,7 +51,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
 
-    BATCH_SIZE = 32
+    BATCH_SIZE = 2
     train_loader = data.DataLoader(
         train_set, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = data.DataLoader(
