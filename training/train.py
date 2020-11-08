@@ -1,3 +1,4 @@
+from utils.gradient_clipping import clip_gradient
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -34,7 +35,7 @@ class Trainer(nn.Module):
         else:
             self.print_per_iter = int(len(self.train_loader) / 10)
 
-        print(f'Training for {num_epochs} ...')
+        print(f'Training for {num_epochs} epochs ...')
         for epoch in range(num_epochs):
             self.epoch = epoch + 1
 
@@ -62,6 +63,10 @@ class Trainer(nn.Module):
             self.optimizer.zero_grad()
             loss = self.model.training_step(batch)
             loss.backward()
+
+            if self.gradient_clip is not None:
+                clip_gradient(self.optimizer, self.gradient_clip)
+
             self.optimizer.step()
             epoch_loss += loss.item()
             running_loss += loss.item()
@@ -102,7 +107,7 @@ class Trainer(nn.Module):
         val_loss = epoch_loss / len(self.val_loader)
         val_acc = epoch_acc / len(self.val_loader)
         print(
-            f'Eval: Val Loss: {val_loss: 10.5f} | Val Acc: {val_acc: 10.5f} |', end=' ')
+            f'Epoch: [{self.epoch}/{self.num_epochs}] | Eval: Val Loss: {val_loss: 10.5f} | Val Acc: {val_acc: 10.5f} |', end=' ')
         for metric, score in metric_dict.items():
             print(f'{metric}: {score}', end='|')
         print('\n')
@@ -128,6 +133,7 @@ class Trainer(nn.Module):
         self.checkpoint = None
         self.evaluate_epoch = 1
         self.scheduler = None
+        self.gradient_clip = None
         self.logger = Logger()
         for i, j in kwargs.items():
             setattr(self, i, j)
