@@ -192,7 +192,9 @@ class ObjectDetectionDataset(data.Dataset):
         # Denormalize in transforms
         results = self.transforms.Denormalize(
             img=img, box=box, category=category)
-        img, box, category = results['img'], results['box'], results['category']
+        img, box, category = results['img'], results['box'].numpy(
+        ), results['category'].numpy()  # change to numpy type
+
         self.visualize(img, box, category, figsize)
 
     def __str__(self) -> str:

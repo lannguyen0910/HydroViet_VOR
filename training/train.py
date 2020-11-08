@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from .checkpoint import CheckPoint, load
+from logger import Logger
 
 
 class Trainer(nn.Module):
@@ -14,6 +15,12 @@ class Trainer(nn.Module):
         self.criterion = model.criterion
         self.metrics = model.metrics  # list
         self.set_attribute(kwargs)
+
+    def logged(self, logs):
+        tags = [tag for tag in logs.keys()]
+        values = [value for value in logs.values()]
+
+        self.logger.write(tags=tags, values=values)
 
     def fit(self, num_epochs=10, print_per_iter=None):
         self.num_epochs = num_epochs
@@ -28,19 +35,20 @@ class Trainer(nn.Module):
             self.print_per_iter = int(len(self.train_loader) / 10)
 
         print(f'Training for {num_epochs} ...')
-        for epoch in tqdm(range(num_epochs)):
+        for epoch in range(num_epochs):
             self.epoch = epoch
             train_loss = self.train_per_epoch()
             print(
                 f'Epoch: [{epoch + 1}/{num_epochs}] | Train Loss: {train_loss}')
+            train_dict = {'Train Loss per Epoch': train_loss, }
+            self.logged(train_dict)
 
             if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
                 val_loss, val_acc, val_metrics = self.evaluate_per_epoch()
-                print(
-                    f'Eval: Val Loss: {val_loss:10.5f} | Val Acc: {val_acc:10.5f} |', end=' ')
-                for metric, score in val_metrics.items():
-                    print(f'{metric}: {score}', end='|')
-                print('\n')
+                val_dict = {'Validation Loss per Epoch': val_loss,
+                            'Validation Accuracy per Epoch': val_acc}
+                val_dict.update(val_metrics)
+                self.logged(val_dict)
 
             if epoch % self.checkpoint.save_per_epoch == 0 and epoch + 1 == num_epochs:
                 self.checkpoint.save(self.model, epoch=epoch)
@@ -50,7 +58,7 @@ class Trainer(nn.Module):
         epoch_loss = 0.0
         running_loss = 0.0
 
-        for i, batch in enumerate(self.train_loader):
+        for i, batch in tqdm(enumerate(self.train_loader)):
             self.optimizer.zero_grad()
             loss = self.model.training_step(batch)
             loss.backward()
@@ -59,9 +67,10 @@ class Trainer(nn.Module):
             running_loss += loss.item()
 
             iters = len(self.train_loader)*self.epoch + i + 1
-            if i % self.print_per_iter == 0:
+            if iters % self.print_per_iter == 0:
                 print(f'\tIter: [{iters}/{self.num_iters}] \
                     | Traning Loss: {running_loss/self.print_per_iter:10.5f}')
+                self.logged({'Train Loss per Batch': running_loss, })
                 running_loss = 0
 
         return epoch_loss / len(self.train_loader)
@@ -84,14 +93,23 @@ class Trainer(nn.Module):
         metric_dict = {}
 
         with torch.no_grad():
-            for batch in self.val_loader:
+            for batch in tqdm(self.val_loader):
                 loss, accuracy, metrics = self.model.evaluate_step(batch)
                 epoch_loss += loss
                 epoch_acc += accuracy
                 metric_dict.update(metrics)
 
         self.model.reset_metrics()
-        return epoch_loss / len(self.val_loader), epoch_acc / len(self.val_loader), metric_dict
+
+        val_loss = epoch_loss / len(self.val_loader)
+        val_acc = epoch_acc / len(self.val_loader)
+        print(
+            f'Eval: Val Loss: {val_loss: 10.5f} | Val Acc: {val_acc: 10.5f} |', end=' ')
+        for metric, score in metric_dict.items():
+            print(f'{metric}: {score}', end='|')
+        print('\n')
+
+        return val_loss, val_acc, metric_dict
 
     def __str__(self) -> str:
         title = '------------- Model Summary ---------------\n'
@@ -111,5 +129,7 @@ class Trainer(nn.Module):
     def set_attribute(self, kwargs):
         self.checkpoint = None
         self.evaluate_epoch = 1
+        self.scheduler = None
+        self.logger = Logger()
         for i, j in kwargs.items():
             setattr(self, i, j)

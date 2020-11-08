@@ -42,7 +42,7 @@ class ClassificationAccuracyMetric:
         return self.output_size
 
 
-if __name__ == '__main__':
+def test():
     accuracy = ClassificationAccuracyMetric()
     output = [[1, 4, 2],
               [5, 7, 4],

@@ -143,7 +143,7 @@ class F1_Loss(nn.Module):
         return 1 - f1.mean()
 
 
-if __name__ == '__main__':
+def test():
     f1 = ClassificationF1Score(3)
     y_true = torch.tensor([0, 1, 2, 0, 1, 2])
     y_pred = torch.tensor([[3, 1, 2], [0, 1, 2], [1, 3, 1], [

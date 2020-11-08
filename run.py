@@ -48,6 +48,9 @@ if __name__ == '__main__':
     print('Item: ', train_set[2]['category'])
     N_CATEGORIES = len(train_set)
 
+    logger = Logger()
+    logger.log('Tensorboard for Image Classification')
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
 
@@ -76,5 +79,5 @@ if __name__ == '__main__':
     chpoint = CheckPoint(save_per_epoch=2)
 
     trainer = Trainer(model, train_loader, val_loader,
-                      checkpoint=chpoint, evaluate_epoch=100)
-    trainer.fit(num_epochs=EPOCHS, print_per_iter=10)
+                      checkpoint=chpoint, evaluate_epoch=2)
+    trainer.fit(num_epochs=EPOCHS, print_per_iter=100)
