@@ -20,7 +20,7 @@ class ObjectDetectionDataset(data.Dataset):
         + anno_path: path to annotation-json-file
     """
 
-    def __init_(self, root, anno_path, transforms=None, shuffle=False, max_samples=None):
+    def __init__(self, root, anno_path, transforms=None, shuffle=False, max_samples=None):
         self.root = root
         self.anno_path = anno_path
         _, self.ext = os.path.splitext(anno_path)
@@ -65,12 +65,8 @@ class ObjectDetectionDataset(data.Dataset):
         """
         Paths of images (List)
         """
-        if os.listdir(self.root) < 100:
-            images_list = [os.path.join(os.path.join(self.root, batch), images)
-                           for batch in sorted(os.listdir(self.root)) for images in batch]
-        else:
-            images_list = [os.path.join(self.root, images)
-                           for images in sorted(os.listdir(self.root))]
+        images_list = [os.path.join(self.root, image['file_name'])
+                       for image in self.data['images']]
 
         if self.shuffle:
             random.shuffle(images_list)

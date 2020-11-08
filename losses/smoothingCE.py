@@ -11,13 +11,13 @@ class SmoothingCE(nn.Module):
 
     def forward(self, outputs, targets):
         batch_size, n_classes = outputs.shape
-        print('Output shape: ', outputs)
+        # print('Output shape: ', outputs)
         y_hot = torch.zeros(outputs.shape).scatter_(
             1, targets.unsqueeze(1), 1.0)
-        print('Y hot: ', y_hot)
+        # print('Y hot: ', y_hot)
         y_smooth = (1 - self.alpha) * y_hot + self.alpha / n_classes
         func = nn.functional.log_softmax(outputs, 1)
-        print('Func: ', func)
+        # print('Func: ', func)
         loss = torch.sum(- y_smooth * func, -1).sum()
 
         if self.reduction:
@@ -32,13 +32,13 @@ class SmoothingCE(nn.Module):
 # Y hot:  tensor([[0., 0., 1., 0., 0.],
 #                 [0., 0., 0., 1., 0.],
 #                 [0., 0., 1., 0., 0.]])
+def testSmoothCELoss():
+    loss = SmoothingCE()
+    input = torch.randn(3, 5, requires_grad=True)
+    target = torch.empty(3, dtype=torch.long).random_(5)
+    print('input: ', input)
+    print('target: ', target)
+    output = loss(input, target)
+    output.backward()
 
-loss = SmoothingCE()
-input = torch.randn(3, 5, requires_grad=True)
-target = torch.empty(3, dtype=torch.long).random_(5)
-print('input: ', input)
-print('target: ', target)
-output = loss(input, target)
-output.backward()
-
-print(output)
+    print(output)
