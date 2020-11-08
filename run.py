@@ -1,18 +1,12 @@
 from models.classifier import Classifier
 from random import shuffle
 from numpy.lib.npyio import save
-# from torchvision import transforms
 from torchvision.models.resnet import ResNet,  resnet34, resnet50
 from tqdm import tqdm
-# from datasets.transform import transforming
 from datasets.image_classification import ImageClassificationDataset
 from utils.getter import *
 
-import torch
-import torch.utils.data as data
-import torch.nn as nn
-import torchvision.models as models
-from torch.optim.lr_scheduler import StepLR
+
 # from torchsummary import summary
 
 
@@ -73,7 +67,7 @@ if __name__ == '__main__':
 
     resnet = resnet50(pretrained=True).to(device)
     model = Classifier(backbone=resnet, n_classes=N_CATEGORIES, optimizer=optimizer, criterion=criterion, metrics=metrics,
-                       lr=1e-4, freeze=True, device=device, optim_params=None)
+                       lr=lr, freeze=True, device=device, optim_params=None)
     model.modify_last_layer()
     print('Number of trainable parameters in model: ',
           model.trainable_parameters())

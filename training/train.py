@@ -48,6 +48,9 @@ class Trainer(nn.Module):
                 val_dict.update(val_metrics)
                 self.logged(val_dict)
 
+            if self.scheduler is not None:
+                self.scheduler.step()
+
             if epoch % self.checkpoint.save_per_epoch == 0 and epoch + 1 == num_epochs:
                 self.checkpoint.save(self.model, epoch=epoch)
 
@@ -124,7 +127,7 @@ class Trainer(nn.Module):
         outputs = self.model.forward_step()
         print('Feedforward: output_shape: ', outputs.shape)
 
-    def set_attribute(self, kwargs):
+    def set_attribute(self, **kwargs):
         self.checkpoint = None
         self.evaluate_epoch = 1
         self.scheduler = None
