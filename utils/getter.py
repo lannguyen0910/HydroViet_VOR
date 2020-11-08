@@ -7,6 +7,7 @@ from training import *
 from augmentation import *
 from logger import *
 from utils import *
+from ssd import *
 
 import torch
 import torch.utils.data as data
