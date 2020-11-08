@@ -36,10 +36,9 @@ class Trainer(nn.Module):
 
         print(f'Training for {num_epochs} ...')
         for epoch in range(num_epochs):
-            self.epoch = epoch
-            train_loss = self.train_per_epoch()
-            print(
-                f'Epoch: [{epoch + 1}/{num_epochs}] | Train Loss: {train_loss}')
+            self.epoch = epoch + 1
+
+            self.train_per_epoch()
 
             if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
                 val_loss, val_acc, val_metrics = self.evaluate_per_epoch()
@@ -69,12 +68,10 @@ class Trainer(nn.Module):
 
             iters = len(self.train_loader)*self.epoch + i + 1
             if iters % self.print_per_iter == 0:
-                print(f'\tIter: [{iters}/{self.num_iters}] \
+                print(f'\tEpoch: [{self.epoch }/{self.num_epochs}] | Iter: [{iters}/{self.num_iters}] \
                     | Traning Loss: {running_loss/self.print_per_iter:10.5f}')
                 self.logged({'Train Loss per Batch': running_loss, })
                 running_loss = 0
-
-        return epoch_loss / len(self.train_loader)
 
     def inference_per_batch(self, test_loader):
         self.model.eval()

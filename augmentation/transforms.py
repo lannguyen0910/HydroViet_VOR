@@ -96,11 +96,11 @@ class ToTensor(object):
         }
 
         if kwargs['box'] is not None:
-            box = torch.FloatTensor(kwargs['box'])
+            box = torch.FloatTensor([kwargs['box']])
             results['box'] = box
 
         if kwargs['category'] is not None:
-            category = torch.LongTensor(kwargs['category'])
+            category = torch.LongTensor([kwargs['category']])
             results['category'] = category
 
         return results
