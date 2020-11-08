@@ -87,6 +87,6 @@ class multibox_loss(nn.Module):
         cls_loss = self.focal_loss_alt(masked_cls_preds, cls_targets[pos_neg])
 
         print('loc_loss: %.3f | cls_loss: %.3f' %
-              (loc_loss.data[0]/num_pos, cls_loss.data[0]/num_pos), end=' | ')
-        loss = (loc_loss+cls_loss)/num_pos
+              (loc_loss.data[0] / num_pos, cls_loss.data[0] / num_pos), end=' | ')
+        loss = (loc_loss + cls_loss) / num_pos
         return loss

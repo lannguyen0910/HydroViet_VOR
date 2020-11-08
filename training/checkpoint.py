@@ -10,12 +10,13 @@ class CheckPoint:
         save_frequency (int): continuously 1 epoch
     """
 
-    def __init__(self, save_per_epoch=1, path='weights'):
+    def __init__(self, save_per_epoch=1, path=None):
         self.path = path
         self.save_per_epoch = save_per_epoch
 
-        self.path = os.path.join(
-            path, datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        if self.path is None:
+            self.path = os.path.join(
+                'weights', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
     def save(self, model, **kwargs):
         if not os.path.exists(self.path):

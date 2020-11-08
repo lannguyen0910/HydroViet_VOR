@@ -1,19 +1,39 @@
 import os
-import random
 from torch.utils.tensorboard import SummaryWriter
+from datetime import datetime
 
 
 class Logger():
-    def __init__(self, log_dir='logger/runs'):
+    """
+    Logger Tensorboard
+        - log_dir (str): path to save logs
+    """
+
+    def __init__(self, log_dir=None):
         self.log_dir = log_dir
+
+        if self.log_dir is None:
+            self.log_dir = os.path.join(
+                'loggers/run', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
         self.writer = SummaryWriter(log_dir=self.log_dir)
+        self.iters = {}
 
-    def log(self, text):
-        for n_iter in range(100):
-            self.writer.add_scalar('Loss/train', random.random(), n_iter)
-            self.writer.add_scalar('Loss/test', random.random(), n_iter)
-            self.writer.add_scalar('Accuracy/train', random.random(), n_iter)
-            self.writer.add_scalar('Accuracy/test', random.random(), n_iter)
+    def write(self, tags, values):
+        """
+        Write a log to specified directory
+        :param tags: (str) tag for log
+        :param values: (number) value for corresponding tag
+        """
+        if not isinstance(tags, list):
+            tags = list(tags)
+        if not isinstance(values, list):
+            values = list(values)
+
+        for i, (tag, value) in enumerate(zip(tags, values)):
+            if tag not in self.iters.keys():
+                self.iters[tag] = 0
+            self.writer.add_scalar(tag, value, self.iters[tag])
+            self.iters[tag] += 1
