@@ -1,25 +1,18 @@
 import torch
 import torch.nn as nn
 from .baseline import BaselineModel
+import torchvision.models as models
 
 
 class Classifier(BaselineModel):
-    def __init__(self, backbone, n_classes, **kwargs):
+    def __init__(self, n_classes, **kwargs):
         super(Classifier, self).__init__(**kwargs)
-        self.model = backbone
-        self.name = 'Classifier'
+        self.model = models.resnet34(pretrained=True)
+        self.name = 'ResNet34'
         self.optimizer = self.optimizer(self.parameters(), lr=self.lr)
         self.set_optimizer_params()
         self.n_classes = n_classes
 
-        if self.device is not None:
-            self.model.to(self.device)
-            self.criterion.to(self.device)
-
-    def forward(self, x):
-        return self.model(x)
-
-    def modify_last_layer(self):
         if self.freeze:
             for params in self.model.parameters():
                 params.requires_grad = False
@@ -29,7 +22,11 @@ class Classifier(BaselineModel):
                                   out_features=self.n_classes)
 
         if self.device is not None:
-            self.model.fc.to(self.device)
+            self.model.to(self.device)
+            self.criterion.to(self.device)
+
+    def forward(self, x):
+        return self.model(x)
 
     def training_step(self, batch):
         inputs = batch["img"]

@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 from metrics import ClassificationAccuracyMetric
 
@@ -25,9 +24,8 @@ class BaselineModel(nn.Module):
                     param[key] = self.optim_params[key]
 
     def unfreeze(self):
-        if not self.freeze:
-            for params in self.parameters():
-                params.requires_grad = True
+        for params in self.parameters():
+            params.requires_grad = True
 
     def trainable_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
