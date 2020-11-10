@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.nn.functional import cross_entropy
-from utils.one_hot import one_hot
+from utils.techniques.one_hot import one_hot
 # Official implementation of Focal Loss in their paper
 
 

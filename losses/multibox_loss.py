@@ -1,6 +1,6 @@
 import torch.nn.functional as F
 import torch.nn as nn
-from utils.one_hot import one_hot_embedding
+from utils.techniques.one_hot import one_hot_embedding
 from torch.autograd import Variable
 from ssd.utils import *
 

@@ -1,4 +1,4 @@
-from utils.gradient_clipping import clip_gradient
+from utils.techniques.gradient_clipping import clip_gradient
 import torch
 import torch.nn as nn
 from tqdm import tqdm
