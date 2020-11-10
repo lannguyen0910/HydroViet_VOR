@@ -325,9 +325,9 @@ class PredictionConvolutions(nn.Module):
         return locs, classes_scores
 
 
-class SSD(nn.Module):
+class SSD300(nn.Module):
     def __init__(self, n_classes=2):
-        super(SSD, self).__init__()
+        super(SSD300, self).__init__()
         self.n_classes = n_classes
 
         self.base = VGGBase().cuda()
