@@ -1,5 +1,4 @@
 import argparse
-import csv
 import random
 import os
 from tqdm import tqdm
