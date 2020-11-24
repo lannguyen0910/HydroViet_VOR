@@ -63,17 +63,18 @@ class Denormalize(object):
     Denormalize a tensor image and boxes to display image.
     """
 
-    def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], **kwargs):
+    def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], box_transform=True, **kwargs):
         self.mean = mean
         self.std = std
+        self.box_transform = box_transform
 
     def __call__(self, img, box=None, **kwargs):
         """
-        Args: 
+        Args:
             img_tensor (Tensor): image of size (C, H, W) to be normalized
 
         Return:
-            old_img_numpy (Numpy)   
+            old_img_numpy (Numpy)
         """
         mean = np.array(self.mean)
         std = np.array(self.std)
@@ -81,6 +82,14 @@ class Denormalize(object):
         img = img.numpy().squeeze().transpose(1, 2, 0)
         img = (img * std + mean)
         img = np.clip(img, 0, 1)
+
+        if box is not None and self.box_transform:
+            _, i_h, i_w = img.size()
+            for bb in box:
+                bb[0] = bb[0] * i_w
+                bb[1] = bb[1] * i_h
+                bb[2] = bb[2] * i_w
+                bb[3] = bb[3] * i_h
 
         results = {
             'img': img,
