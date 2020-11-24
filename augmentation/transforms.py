@@ -27,12 +27,21 @@ class Normalize(object):
         self.std = std
         self.inplace = inplace
 
-    def __call__(self, img, **kwargs):
+    def __call__(self, img, box=None, **kwargs):
         new_img = F.normalize(img, mean=self.mean,
                               std=self.std, inplace=self.inplace)
+
+        if box is not None:
+            _, i_h, i_w = img.size()
+            for bb in box:
+                bb[0] = bb[0] * 1.0 / i_w
+                bb[1] = bb[1] * 1.0 / i_h
+                bb[2] = bb[2] * 1.0 / i_w
+                bb[3] = bb[3] * 1.0 / i_h
+
         results = {
             'img': new_img,
-            'box': kwargs['box'],
+            'box': box,
             'category': kwargs['category'],
             'mask': None
         }
@@ -96,7 +105,8 @@ class ToTensor(object):
         }
 
         if kwargs['box'] is not None:
-            box = torch.FloatTensor(kwargs['box'])
+            # default: dtype = torch.float32
+            box = torch.as_tensor(kwargs['box'])
             results['box'] = box
 
         if kwargs['category'] is not None:

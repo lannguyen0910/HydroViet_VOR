@@ -75,7 +75,7 @@ def gcxgcy_to_cxcy(gcxgcy, priors_cxcy):
                       torch.exp(gcxgcy[:, 2:] / 5) * priors_cxcy[:, 2:]], 1)  # w, h
 
 
-def find_jaccard_overlap(set_1, set_2):
+def find_jaccard_overlap(set_1, set_2, order = 'xyxy'):
     """
     Find the Jaccard Overlap (IoU) of every box combination between two sets of boxes that are in boundary coordinates.
     :param set_1: set 1, a tensor of dimensions (n1, 4)
