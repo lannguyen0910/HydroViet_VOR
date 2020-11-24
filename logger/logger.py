@@ -5,8 +5,8 @@ from datetime import datetime
 
 class Logger():
     """
-    Logger Tensorboard
-        - log_dir (str): path to save logs
+    Logger for Tensorboard visualization
+    :param log_dir: Path to save checkpoint
     """
 
     def __init__(self, log_dir=None):

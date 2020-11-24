@@ -20,6 +20,8 @@ _pil_interpolation_to_str = {
 class Normalize(object):
     """
     Normalize a tensor image with default mean and standard of Imagenet deviation.
+    :param mean: (list of float)
+    :param std: (list of float)
     """
 
     def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False, **kwargs):
@@ -28,6 +30,10 @@ class Normalize(object):
         self.inplace = inplace
 
     def __call__(self, img, box=None, **kwargs):
+        """
+        :param img: (tensor) image to be normalized
+        :param box: (list of tensor) bounding boxes to be normalized, by dividing them with image's width and heights. Format: (x,y,width,height)
+        """
         new_img = F.normalize(img, mean=self.mean,
                               std=self.std, inplace=self.inplace)
 
@@ -54,14 +60,14 @@ class Normalize(object):
 
 class Denormalize(object):
     """
-    Denormalize a tensor image and return to numpy type to display image.
+    Denormalize a tensor image and boxes to display image.
     """
 
     def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], **kwargs):
         self.mean = mean
         self.std = std
 
-    def __call__(self, img, **kwargs):
+    def __call__(self, img, box=None, **kwargs):
         """
         Args: 
             img_tensor (Tensor): image of size (C, H, W) to be normalized
@@ -95,6 +101,11 @@ class ToTensor(object):
         pass
 
     def __call__(self, img, **kwargs):
+        """
+            :param img: (PIL Image) image to be tensorized
+            :param box: (list of float) bounding boxes to be tensorized. Format: (x, y, width, height)
+            :param label: (int) bounding boxes to be tensorized. Format: (x, y, width, height)
+        """
         img = F.to_tensor(img)
 
         results = {
