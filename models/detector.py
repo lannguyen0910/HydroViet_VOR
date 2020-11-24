@@ -6,7 +6,7 @@ import ssd.model as ssd
 
 class Detector(BaselineModel):
     def __init__(self, n_categories, **kwargs):
-        super(Detector, self).__init__(**kwargs)
+        super(Detector, self).__init__(n_classes=n_categories, **kwargs)
         self.model = ssd.SSD300(n_classes=n_categories)
         self.model_name = "SSD300"
         self.optimizer = self.optimizer(self.parameters(), lr=self.lr)

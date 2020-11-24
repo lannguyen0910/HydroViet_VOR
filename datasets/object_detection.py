@@ -166,6 +166,7 @@ class ObjectDetectionDataset(data.Dataset):
         img_item_name = img_item['file_name']
         img_anno_list = [i for i in list(self.data['annotations'])
                          if i['image_id'] == img_item_id]
+
         img_path = os.path.join(self.root, img_item_name)
         box = np.floor(np.array([i['bbox'] for i in img_anno_list]))
         category = np.array([i['category_id'] for i in img_anno_list])
