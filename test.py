@@ -1,6 +1,6 @@
 from datasets.vocabulary import VocabularyDataset
 from datasets.text_classification import TextClassificationDataset
-from utils.nlp_tokenizer import TextTokenizer
+from augmentation.nlp_tokenizer import TextTokenizer
 
 if __name__ == '__main__':
     dataset = TextClassificationDataset('bbc-text.csv')

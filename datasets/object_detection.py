@@ -14,7 +14,7 @@ from augmentation.transforms import Compose
 class ObjectDetectionDataset(data.Dataset):
     """
     - Object detection for COCO dataset Format
-    - Bounding Box: (x1, y1, x2, y2)
+    - Bounding Box: (x1, y1, w, h )
     - Args:
         + root : directory contains images
         + anno_path: path to annotation-json-file
@@ -159,7 +159,7 @@ class ObjectDetectionDataset(data.Dataset):
 
     def __getitem__(self, idx):
         """
-        Get a item (image) by passing an idx
+        Get an item (image) by passing an idx
         """
         img_item = self.data['images'][idx]
         img_item_id = img_item['id']

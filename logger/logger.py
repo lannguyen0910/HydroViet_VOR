@@ -14,7 +14,7 @@ class Logger():
 
         if self.log_dir is None:
             self.log_dir = os.path.join(
-                'loggers/run', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+                'logger/run', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 

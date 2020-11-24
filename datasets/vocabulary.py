@@ -3,7 +3,7 @@ import torch.utils.data as data
 import sys
 import matplotlib.pyplot as plt
 import dill
-from utils.nlp_tokenizer import TextTokenizer
+from augmentation.nlp_tokenizer import TextTokenizer
 from tqdm import tqdm
 from collections import defaultdict
 
