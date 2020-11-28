@@ -3,7 +3,8 @@ from metrics import ClassificationAccuracyMetric
 
 
 class BaselineModel(nn.Module):
-    def __init__(self, optimizer, criterion, metrics=ClassificationAccuracyMetric(), lr=1e-4, freeze=False, device=None, optim_params=None):
+    def __init__(self, optimizer, criterion, metrics=ClassificationAccuracyMetric(),
+                 lr=1e-4, freeze=False, device=None, optim_params=None):
         super(BaselineModel, self).__init__()
         self.optimizer = optimizer
         self.criterion = criterion

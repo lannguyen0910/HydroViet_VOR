@@ -4,6 +4,7 @@ import torch.nn as nn
 from tqdm import tqdm
 from .checkpoint import CheckPoint, load
 from logger import Logger
+import time
 
 
 class Trainer(nn.Module):
@@ -41,7 +42,7 @@ class Trainer(nn.Module):
 
             self.train_per_epoch()
 
-            if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch:
+            if epoch % self.evaluate_epoch == 0 and epoch + 1 >= self.evaluate_epoch and self.evaluate_epoch != 0:
                 val_loss, val_acc, val_metrics = self.evaluate_per_epoch()
                 val_dict = {'Validation Loss per Epoch': val_loss,
                             'Validation Accuracy per Epoch': val_acc}
@@ -58,14 +59,19 @@ class Trainer(nn.Module):
         self.model.train()
         epoch_loss = 0.0
         running_loss = 0.0
-
+        running_time = 0
         for i, batch in tqdm(enumerate(self.train_loader)):
             self.optimizer.zero_grad()
+            start = time.time()
+
             loss = self.model.training_step(batch)
             loss.backward()
 
             if self.gradient_clip is not None:
                 clip_gradient(self.optimizer, self.gradient_clip)
+
+            end = time.time()
+            running_time += end - start
 
             self.optimizer.step()
             epoch_loss += loss.item()
@@ -74,9 +80,10 @@ class Trainer(nn.Module):
             iters = len(self.train_loader)*self.epoch + i + 1
             if iters % self.print_per_iter == 0:
                 print(f'\tEpoch: [{self.epoch }/{self.num_epochs}] | Iter: [{iters}/{self.num_iters}] \
-                    | Traning Loss: {running_loss/self.print_per_iter:10.5f}')
+                    | Traning Loss: {running_loss/self.print_per_iter:10.5f} | Time: {running_time:10.4f}')
                 self.logged({'Train Loss per Batch': running_loss, })
                 running_loss = 0
+                running_time = 0
 
     def inference_per_batch(self, test_loader):
         self.model.eval()

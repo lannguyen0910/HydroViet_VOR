@@ -19,6 +19,10 @@ class CheckPoint:
                 'weights', datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
     def save(self, model, **kwargs):
+        """
+        save model and optimizer weight
+        :params: pytorch model state dict
+        """
         if not os.path.exists(self.path):
             os.mkdir(self.path)
 
@@ -36,7 +40,7 @@ class CheckPoint:
 def load(model, path):
     """
     - Load checkpoint
-        model (.pt): model weights
+        model (nn.Module): model weights
         path (str): checkpoint path
     """
     state = torch.load(path)
