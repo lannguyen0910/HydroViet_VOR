@@ -6,11 +6,13 @@ import os
 SEED = 42
 
 
-def random_seed(seed=SEED):
+def set_seed(seed=SEED, device=True):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+    if device == True:
+        torch.cuda.manual_seed(seed)
+    else:
+        torch.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True

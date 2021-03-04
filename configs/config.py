@@ -7,6 +7,7 @@ class Hyperparams:
     num_workers = 4
     lr = 1e-3
     epochs = 200
+    pin_memory = True
 
 
 class Config():
