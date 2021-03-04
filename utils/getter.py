@@ -8,6 +8,7 @@ from augmentation import *
 from logger import *
 from utils import *
 from ssd import *
+from configs import *
 
 import torch
 import torch.utils.data as data

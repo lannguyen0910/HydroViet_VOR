@@ -27,9 +27,12 @@ class CheckPoint:
             os.mkdir(self.path)
 
         epoch = kwargs['epoch'] if 'epoch' in kwargs else '0'
-        model_path = "_".join([model.model_name, str(epoch)])
+        iters = kwargs['iters'] if 'iters' in kwargs else '0'
+
+        model_path = "_".join([model.model_name, str(epoch), str(iters)])
 
         weights = {
+            'epoch': epoch,
             'model': model.model.state_dict(),
             'optimizer': model.optimizer.state_dict()
         }
@@ -44,6 +47,19 @@ def load(model, path):
         path (str): checkpoint path
     """
     state = torch.load(path)
-    model.model.load_state_dict(state['model'])
-    model.optimizer.load_state_dict(state['optimizer'])
-    print('Loaded!')
+    try:
+        model.model.load_state_dict(state["model"])
+        model.optimizer.load_state_dict(state["optimizer"])
+
+    except KeyError:
+        try:
+            ret = model.model.load_state_dict(state, strict=False)
+        except RuntimeError as e:
+            print(f'[Warning] Ignoring {e}')
+
+    except torch.nn.modules.module.ModuleAttributeError:
+        try:
+            ret = model.load_state_dict(state["model"])
+        except RuntimeError as e:
+            print(f'[Warning] Ignoring {e}')
+    print("Loaded Successfully!")

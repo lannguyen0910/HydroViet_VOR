@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils import getter
+
 
 # https: // github.com/adambielski/siamese-triplet/blob/master/losses.py
 

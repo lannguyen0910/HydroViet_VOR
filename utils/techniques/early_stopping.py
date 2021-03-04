@@ -1,4 +1,4 @@
-from ..saved_model import saved_model
+from utils.helper.saved_model import save_model
 import numpy as np
 
 
@@ -23,7 +23,7 @@ class EarlyStopping:
                 self.early_stop = True
 
         else:  # val_loss < val_loss_min
-            saved_model(model, optimizer, scheduler, fold, epoch, best=True)
+            save_model(model, optimizer, scheduler, fold, epoch, best=True)
             print('*** Validation loss decreased ({} --> {}).  Saving model... ***'.
                   format(round(self.val_loss_min, 6), round(val_loss, 6)))
 

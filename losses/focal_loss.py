@@ -7,12 +7,11 @@ import torch
 import sys
 sys.path.append('../')
 
+
 # Official implementation of Focal Loss in their paper
-
-
 class FocalLoss1(nn.Module):
     def __init__(self, focus_param=2, balance_param=0.25):
-        super(FocalLoss, self).__init__()
+        super(FocalLoss1, self).__init__()
         self.focus_param = focus_param
         self.balance_param = balance_param
 
@@ -44,9 +43,9 @@ class FocalLoss2(nn.Module):
         return loss.sum()
 
 
-class FocalLoss(nn.modules.loss._WeightedLoss):
+class FocalLoss3(nn.modules.loss._WeightedLoss):
     def __init__(self, weight=None, gamma=2, reduction='mean'):
-        super(FocalLoss, self).__init__(weight, reduction=reduction)
+        super(FocalLoss3, self).__init__(weight, reduction=reduction)
         # weight parameter will act as the alpha parameter to balance class weights
         self.weight = weight
         self.gamma = gamma
@@ -64,11 +63,11 @@ def testFocalLoss():
     targets = Variable(torch.LongTensor(3).random_(5))
     print(inputs)
     print(targets)
-    loss = FocalLoss()
+    loss3 = FocalLoss3()
     loss1 = FocalLoss1()
     loss2 = FocalLoss2()
 
-    output = loss(inputs, targets)
+    output = loss3(inputs, targets)
     output1 = loss1(inputs, targets)
     output2 = loss2(inputs, targets)
 
