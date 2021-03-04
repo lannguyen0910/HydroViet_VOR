@@ -1,10 +1,10 @@
 from torch.utils.data import Dataset
 import numpy as np
 from PIL import Image
-
+from utils import getter
 # https: // github.com/adambielski/siamese-triplet/blob/master/datasets.py
 
-
+# For MNIST dataset
 class TripletDataset(Dataset):
     """
     Train: For each sample (anchor) randomly chooses a positive and negative samples
