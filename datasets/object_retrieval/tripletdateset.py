@@ -1,5 +1,4 @@
 import os
-from matplotlib.image import imread
 import numpy as np
 from torch.utils.data import Dataset
 from .datasethelper import *
@@ -93,13 +92,13 @@ class PreProcessing(Dataset):
 class TripletDataset(Dataset):
     def __init__(self, root,
                  df=None,
-                 transforms=None,
+                 transform=None,
                  n_samples=None,
                  shuffle=False,
                  mode='train'):
         self.root = root
         self.df = df
-        self.transforms = transforms
+        self.transforms = transform
         self.n_samples = n_samples
         self.mode = mode
         self.shuffle = shuffle

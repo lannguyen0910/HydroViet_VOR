@@ -11,8 +11,8 @@ class TripletNet(nn.Module):
         embedded_x = self.embedding_net(x)
         embedded_y = self.embedding_net(y)
         embedded_z = self.embedding_net(z)
-        dist_a = F.pairwise_distance(embedded_x, embedded_y, 2)
-        dist_b = F.pairwise_distance(embedded_x, embedded_z, 2)
+        dist_a = F.pairwise_distance(embedded_x, embedded_y)
+        dist_b = F.pairwise_distance(embedded_x, embedded_z)
         return dist_a, dist_b, embedded_x, embedded_y, embedded_z
 
     def get_embedding(self, x):

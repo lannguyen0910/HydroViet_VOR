@@ -2,12 +2,17 @@ import yaml
 
 
 class Hyperparams:
-    size = (500, 500)
+    name = 'HydroViet'
+    size = (224, 224)
     batch_size = 6
     num_workers = 4
     lr = 1e-3
-    epochs = 200
+    epochs = 20
     pin_memory = True
+    log_interval = 20
+    log_dir = './ckpt/resnet'
+    train_csv = './csv/write_train.csv'
+    val_csv = './csv/write_val.csv'
 
 
 class Config():

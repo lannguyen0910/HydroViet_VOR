@@ -32,7 +32,6 @@ class CheckPoint:
         model_path = "_".join([model.model_name, str(epoch), str(iters)])
 
         weights = {
-            'epoch': epoch,
             'model': model.model.state_dict(),
             'optimizer': model.optimizer.state_dict()
         }

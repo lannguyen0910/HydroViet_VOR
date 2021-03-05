@@ -1,16 +1,18 @@
+from torch.autograd import Variable
+from torch.utils.data import DataLoader
+from utils.getter import *
+from datasets.image_classification import ImageClassificationDataset
+from tqdm import tqdm
+from torchvision.models.resnet import ResNet,  resnet34, resnet50
+from numpy.lib.npyio import save
+from random import shuffle
+from models.classifier import Classifier
 import argparse
 from visdom import Visdom
 import pandas as pd
-
-from models.classifier import Classifier
-from random import shuffle
-from numpy.lib.npyio import save
-from torchvision.models.resnet import ResNet,  resnet34, resnet50
-from tqdm import tqdm
-from datasets.image_classification import ImageClassificationDataset
-from utils.getter import *
-from torch.utils.data import DataLoader
-
+import shutil
+from torchvision import transforms
+import numpy as np
 # from torchsummary import summary
 
 
@@ -87,9 +89,10 @@ std = [0.229, 0.224, 0.225]
 normalize = transforms.Normalize(mean=mean, std=std)
 transform_train = transforms.Compose([
     transforms.Resize(hp.size),
-    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    normalize
+    transforms.RandomHorizontalFlip(),
+    normalize,
+
 ])
 
 transform_val = transforms.Compose([
@@ -146,29 +149,145 @@ def accuracy(dista, distb):
 
 
 def main():
-    set_seed()
+    set_seed(device=False)
     global best_acc, plotter
-    plotter = VisdomLinePlotter(env='VOR')
+    plotter = VisdomLinePlotter(env_name='VOR')
 
     kwargs = {'num_workers': hp.num_workers,
               'pin_memory': hp.pin_memory} if use_gpu else {}
 
-    train_df = pd.read_csv('write.csv')
+    train_df = pd.read_csv(hp.train_csv)
+    val_df = pd.read_csv(hp.val_csv)
+
     trainset = TripletDataset(
-        root='train', df=train_df, transforms=transform_train, shuffle=True, mode='train')
+        root='train', df=train_df, transform=transform_train, shuffle=True, mode='train')
     trainloader = DataLoader(
         trainset, batch_size=hp.batch_size, shuffle=True, **kwargs)
 
-    testset = TripletDataset(
-        root='testing', transforms=transform_val, shuffle=True, mode='test')
-    testloader = DataLoader(
-        testset, batch_size=hp.batch_size, shuffle=True, **kwargs)
+    valset = TripletDataset(
+        root='testing', df=val_df, transform=transform_val, shuffle=True, mode='val')
+    valloader = DataLoader(
+        valset, batch_size=hp.batch_size, shuffle=True, **kwargs)
 
     model = TripletNet(ResNetExtractor(version=101))
+    print('Number of parameters: ', count_parameters(model))
+
     model.apply(weights_init)
     model = torch.jit.script(model).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=hp.lr)
-    criterion = torch.jit.script(TripletLoss())
+    criterion = torch.jit.script(TripletLoss()).to(device)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
-    
+    for epoch in range(1, hp.epochs + 1):
+        train(trainloader, model, criterion, optimizer, scheduler, epoch)
+
+        acc = test(valloader, model, criterion, epoch)
+
+        # remember best acc and save checkpoint
+        is_best = acc > best_acc
+        best_acc = max(acc, best_acc)
+        save_checkpoint({
+            'epoch': epoch,
+            'state_dict': model.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'scheduler': scheduler.state_dict(),
+            'best_pred': best_acc,
+        }, is_best)
+
+
+def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
+    losses = AverageMeter()
+    accs = AverageMeter()
+    emb_norms = AverageMeter()
+
+    # switch to train mode
+    tnet.train()
+    for batch_idx, (data1, data2, data3) in enumerate(train_loader):
+        if use_gpu:
+            data1, data2, data3 = Variable(data1).to(device), Variable(
+                data2).to(device), Variable(data3).to(device)
+
+        # compute output
+        dista, distb, embedded_x, embedded_y, embedded_z = tnet(
+            data1, data2, data3)
+        # 1 means, dista should be larger than distb
+        target = torch.FloatTensor(dista.size()).fill_(1)
+        if use_gpu:
+            target = Variable(target).to(device)
+
+        loss_triplet = criterion(dista, distb, target)
+        loss_embedd = embedded_x.norm(
+            2) + embedded_y.norm(2) + embedded_z.norm(2)
+        loss = loss_triplet + 0.001 * loss_embedd
+
+        # measure accuracy and record loss
+        acc = accuracy(dista, distb)
+        losses.update(loss_triplet.data[0], data1.size(0))
+        accs.update(acc, data1.size(0))
+        emb_norms.update(loss_embedd.data[0]/3, data1.size(0))
+
+        # compute gradient and do optimizer step
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if batch_idx % hp.log_interval == 0:
+            print('Train Epoch: {} [{}/{}]\t'
+                  'Loss: {:.4f} ({:.4f}) \t'
+                  'Acc: {:.2f}% ({:.2f}%) \t'
+                  'Emb_Norm: {:.2f} ({:.2f})'.format(
+                      epoch, batch_idx * len(data1), len(train_loader.dataset),
+                      losses.val, losses.avg,
+                      100. * accs.val, 100. * accs.avg, emb_norms.val, emb_norms.avg))
+
+    scheduler.step(losses.avg)
+    # log avg values to somewhere
+    plotter.plot('acc', 'train', epoch, accs.avg)
+    plotter.plot('loss', 'train', epoch, losses.avg)
+    plotter.plot('emb_norms', 'train', epoch, emb_norms.avg)
+
+
+def test(test_loader, tnet, criterion, epoch):
+    losses = AverageMeter()
+    accs = AverageMeter()
+
+    # switch to evaluation mode
+    tnet.eval()
+    for _, (data1, data2, data3) in enumerate(test_loader):
+        if use_gpu:
+            data1, data2, data3 = data1.cuda(), data2.cuda(), data3.cuda()
+        data1, data2, data3 = Variable(data1), Variable(data2), Variable(data3)
+
+        # compute output
+        dista, distb, _, _, _ = tnet(data1, data2, data3)
+        target = torch.FloatTensor(dista.size()).fill_(1)
+        target = Variable(target).to(device)
+        test_loss = criterion(dista, distb, target).data[0]
+
+        # measure accuracy and record loss
+        acc = accuracy(dista, distb)
+        accs.update(acc, data1.size(0))
+        losses.update(test_loss, data1.size(0))
+
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {:.2f}%\n'.format(
+        losses.avg, 100. * accs.avg))
+    plotter.plot('acc', 'test', epoch, accs.avg)
+    plotter.plot('loss', 'test', epoch, losses.avg)
+    return accs.avg
+
+
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+    """Saves checkpoint to disk"""
+    directory = "runs/%s/" % (hp.name)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    filename = directory + filename
+    torch.save(state, filename)
+    if is_best:
+        shutil.copyfile(filename, 'runs/%s/' %
+                        (hp.name) + 'model_best.pth.tar')
+
+
+if __name__ == '__main__':
+    main()
