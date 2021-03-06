@@ -183,7 +183,7 @@ class TripletDataset(Dataset):
                 positive_img = self.transforms(positive_img)
                 negative_img = self.transforms(negative_img)
 
-            return anchor_img, negative_img, positive_img
+            return anchor_img, positive_img, negative_img
 
         else:
             if self.transforms is not None:

@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 import torch.nn.functional as F
 from utils import getter
 
@@ -14,10 +15,11 @@ class TripletLoss(nn.Module):
         self.margin = margin
         self.size_average = size_average
 
-    def forward(self, anchor, positive, negative):
+    def forward(self, anchor: torch.Tensor, positive: torch.Tensor, negative: torch.Tensor) -> torch.Tensor:
         distance_positive = (anchor - positive).pow(2).sum(1)  # .pow(.5)
         distance_negative = (anchor - negative).pow(2).sum(1)  # .pow(.5)
-        losses = F.relu(distance_positive - distance_negative + self.margin)
+        losses = torch.relu(distance_positive -
+                            distance_negative + self.margin)
         return losses.mean() if self.size_average else losses.sum()
 
 

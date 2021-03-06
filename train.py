@@ -176,7 +176,8 @@ def main():
     model = torch.jit.script(model).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=hp.lr)
-    criterion = torch.jit.script(TripletLoss()).to(device)
+    criterion = torch.jit.script(
+        torch.nn.MarginRankingLoss(margin=0.2)).to(device)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
     for epoch in range(1, hp.epochs + 1):
@@ -213,6 +214,8 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
             data1, data2, data3)
         # 1 means, dista should be larger than distb
         target = torch.FloatTensor(dista.size()).fill_(1)
+        print(dista.shape)
+        print(target.shape)
         if use_gpu:
             target = Variable(target).to(device)
 
@@ -223,9 +226,9 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
 
         # measure accuracy and record loss
         acc = accuracy(dista, distb)
-        losses.update(loss_triplet.data[0], data1.size(0))
+        losses.update(loss_triplet.data, data1.size(0))
         accs.update(acc, data1.size(0))
-        emb_norms.update(loss_embedd.data[0]/3, data1.size(0))
+        emb_norms.update(loss_embedd.data/3, data1.size(0))
 
         # compute gradient and do optimizer step
         optimizer.zero_grad()
@@ -263,7 +266,7 @@ def test(test_loader, tnet, criterion, epoch):
         dista, distb, _, _, _ = tnet(data1, data2, data3)
         target = torch.FloatTensor(dista.size()).fill_(1)
         target = Variable(target).to(device)
-        test_loss = criterion(dista, distb, target).data[0]
+        test_loss = criterion(dista, distb, target).data
 
         # measure accuracy and record loss
         acc = accuracy(dista, distb)
