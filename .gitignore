@@ -3,7 +3,6 @@
 */*/__pycache__
 logger/run/*
 pi.py
-*.csv
 trainingSample
 testSample
 trainingSet
