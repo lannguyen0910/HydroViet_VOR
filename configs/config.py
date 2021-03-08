@@ -4,9 +4,9 @@ import yaml
 class Hyperparams:
     name = 'HydroViet'
     size = (224, 224)
-    batch_size = 6
+    batch_size = 32
     num_workers = 4
-    lr = 1e-3
+    lr = 3e-4
     epochs = 20
     pin_memory = True
     log_interval = 20

@@ -1,12 +1,12 @@
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from utils.getter import *
-from datasets.image_classification import ImageClassificationDataset
-from tqdm import tqdm
-from torchvision.models.resnet import ResNet,  resnet34, resnet50
-from numpy.lib.npyio import save
-from random import shuffle
-from models.classifier import Classifier
+# from datasets.image_classification import ImageClassificationDataset
+# from tqdm import tqdm
+# from torchvision.models.resnet import ResNet,  resnet34, resnet50
+# from numpy.lib.npyio import save
+# from random import shuffle
+# from models.classifier import Classifier
 import argparse
 from visdom import Visdom
 import pandas as pd
@@ -106,21 +106,21 @@ class VisdomLinePlotter(object):
     """Plots to Visdom"""
 
     def __init__(self, env_name='main'):
-        self.viz = Visdom()
+        self.viz = Visdom(port='8000')
         self.env = env_name
         self.plots = {}
 
-    def plot(self, var_name, split_name, x, y):
+    def plot(self, var_name, split_name, title_name, x, y):
         if var_name not in self.plots:
-            self.plots[var_name] = self.viz.line(X=np.array([x, x]), Y=np.array([y, y]), env=self.env, opts=dict(
+            self.plots[var_name] = self.viz.line(X=np.array([x, x]), Y=np.array([float(y), float(y)]), env=self.env, opts=dict(
                 legend=[split_name],
-                title=var_name,
+                title=title_name,
                 xlabel='Epochs',
                 ylabel=var_name
             ))
         else:
-            self.viz.updateTrace(X=np.array([x]), Y=np.array(
-                [y]), env=self.env, win=self.plots[var_name], name=split_name)
+            self.viz.line(X=np.array([x]), Y=np.array([float(
+                y)]), env=self.env, win=self.plots[var_name], name=split_name, update='append')
 
 
 class AverageMeter(object):
@@ -145,11 +145,11 @@ class AverageMeter(object):
 def accuracy(dista, distb):
     margin = 0
     pred = (dista - distb - margin).cpu().data
-    return (pred > 0).sum()*1.0/dista.size()[0]
+    return (pred > 0).sum() * 1.0/dista.size()[0]
 
 
 def main():
-    set_seed(device=False)
+    set_seed()
     global best_acc, plotter
     plotter = VisdomLinePlotter(env_name='VOR')
 
@@ -214,8 +214,11 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
             data1, data2, data3)
         # 1 means, dista should be larger than distb
         target = torch.FloatTensor(dista.size()).fill_(1)
-        print(dista.shape)
-        print(target.shape)
+
+        # print(dista.shape)
+        # print(target.shape)
+        # print(data1.shape)
+
         if use_gpu:
             target = Variable(target).to(device)
 
@@ -226,7 +229,7 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
 
         # measure accuracy and record loss
         acc = accuracy(dista, distb)
-        losses.update(loss_triplet.data, data1.size(0))
+        losses.update(loss_triplet.data.cpu().numpy(), data1.size(0))
         accs.update(acc, data1.size(0))
         emb_norms.update(loss_embedd.data/3, data1.size(0))
 
@@ -246,9 +249,9 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
 
     scheduler.step(losses.avg)
     # log avg values to somewhere
-    plotter.plot('acc', 'train', epoch, accs.avg)
-    plotter.plot('loss', 'train', epoch, losses.avg)
-    plotter.plot('emb_norms', 'train', epoch, emb_norms.avg)
+    plotter.plot('acc', 'train', 'class acc', epoch, accs.avg)
+    plotter.plot('loss', 'train', 'class loss', epoch, losses.avg)
+    plotter.plot('emb_norms', 'train', 'class emb', epoch, emb_norms.avg)
 
 
 def test(test_loader, tnet, criterion, epoch):
@@ -257,26 +260,33 @@ def test(test_loader, tnet, criterion, epoch):
 
     # switch to evaluation mode
     tnet.eval()
-    for _, (data1, data2, data3) in enumerate(test_loader):
-        if use_gpu:
-            data1, data2, data3 = data1.cuda(), data2.cuda(), data3.cuda()
-        data1, data2, data3 = Variable(data1), Variable(data2), Variable(data3)
+    with torch.no_grad():
+        for _, (data1, data2, data3) in enumerate(test_loader):
+            if use_gpu:
+                data1, data2, data3 = data1.cuda(), data2.cuda(), data3.cuda()
+            data1, data2, data3 = Variable(
+                data1), Variable(data2), Variable(data3)
 
-        # compute output
-        dista, distb, _, _, _ = tnet(data1, data2, data3)
-        target = torch.FloatTensor(dista.size()).fill_(1)
-        target = Variable(target).to(device)
-        test_loss = criterion(dista, distb, target).data
+            # compute output
+            dista, distb, _, _, _ = tnet(data1, data2, data3)
+            target = torch.FloatTensor(dista.size()).fill_(1)
+            target = Variable(target).to(device)
+            print('Dista: ', dista.shape)
+            print('Distb: ', distb.shape)
+            print('Target: ', target.shape)
 
-        # measure accuracy and record loss
-        acc = accuracy(dista, distb)
-        accs.update(acc, data1.size(0))
-        losses.update(test_loss, data1.size(0))
+            test_loss = criterion(dista, distb, target).data.cpu().numpy()
+            print(test_loss)
+
+            # measure accuracy and record loss
+            acc = accuracy(dista, distb)
+            accs.update(acc, data1.size(0))
+            losses.update(test_loss, data1.size(0))
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {:.2f}%\n'.format(
         losses.avg, 100. * accs.avg))
-    plotter.plot('acc', 'test', epoch, accs.avg)
-    plotter.plot('loss', 'test', epoch, losses.avg)
+    plotter.plot('acc', 'test', 'class acc', epoch, accs.avg)
+    plotter.plot('loss', 'test', 'class loss', epoch, losses.avg)
     return accs.avg
 
 
