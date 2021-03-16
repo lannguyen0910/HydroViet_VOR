@@ -3,7 +3,7 @@ from losses import *
 from datasets import *
 from dataloaders import *
 from models import *
-from training import *
+from trainer import *
 # from augmentation import *
 from logger import *
 from utils.helper import *

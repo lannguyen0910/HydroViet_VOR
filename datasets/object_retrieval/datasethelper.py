@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import random
+import torch
 from skimage import transform
 from skimage.util import random_noise
 from PIL import Image
@@ -57,7 +58,17 @@ class RandAugmentation:
         return cv2.GaussianBlur(img, (ksize, ksize), 0)
 
 
-def collate_tuples(batch):
-    if len(batch) == 1:
-        return [batch[0][0]], [batch[0][1]]
-    return [batch[i][0] for i in range(len(batch))], [batch[i][1] for i in range(len(batch))]
+def collate_fn(batch, augment=False):
+    all_fpaths = [sample[0] for sample in batch]
+    all_targets = [sample[1] for sample in batch]
+    img_stack, target_stack = [], []
+    for sub_fpaths, sub_targets in zip(all_fpaths, all_targets):
+        img_tuple = []
+        for fpath, _ in zip(sub_fpaths, sub_targets):
+            img = image_preprocessing(fpath)
+            if augment:
+                img = RandAugmentation().apply(img)
+            img_tuple.append(img)
+        img_stack.append(img_tuple)
+        target_stack.append(sub_targets)
+    return torch.FloatTensor(np.transpose(img_stack, axes=(0, 1, 4, 2, 3))), torch.LongTensor(target_stack)

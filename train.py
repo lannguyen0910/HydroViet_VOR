@@ -1,5 +1,7 @@
+from datasets.object_retrieval.datasethelper import collate_fn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+from functools import partial
 from utils.getter import *
 # from datasets.image_classification import ImageClassificationDataset
 # from tqdm import tqdm
@@ -159,42 +161,52 @@ def main():
     train_df = pd.read_csv(hp.train_csv)
     val_df = pd.read_csv(hp.val_csv)
 
-    trainset = TripletDataset(
-        root='train', df=train_df, transform=transform_train, shuffle=True, mode='train')
-    trainloader = DataLoader(
-        trainset, batch_size=hp.batch_size, shuffle=True, **kwargs)
+    q_train = TripletDataset(
+        root=hp.image_dir, df=train_df,  shuffle=True, mode='train')
+    # q_train = QueryExtractor(dataset='paris', image_dir='./dataset/paris/image/', label_dir='./dataset/paris/label/', subset='train')
 
-    valset = TripletDataset(
-        root='testing', df=val_df, transform=transform_val, shuffle=True, mode='val')
-    valloader = DataLoader(
-        valset, batch_size=hp.batch_size, shuffle=True, **kwargs)
+    train_dataloader = DataLoader(q_train, batch_size=1, num_workers=1, drop_last=False,
+                                  shuffle=True, collate_fn=partial(collate_fn, augment=True), pin_memory=False)
+    for step, (img_tensor, target_tensor) in enumerate(train_dataloader):
+        print(img_tensor.size(), target_tensor.size())
 
-    model = TripletNet(ResNetExtractor(version=101))
-    print('Number of parameters: ', count_parameters(model))
+    # trainset = TripletDataset(
+    #     root='train', df=train_df, transform=transform_train, shuffle=True, mode='train')
+    # trainloader = DataLoader(
+    #     trainset, batch_size=hp.batch_size, shuffle=True, **kwargs)
 
-    model.apply(weights_init)
-    model = torch.jit.script(model).to(device)
+    # valset = TripletDataset(
+    #     root='testing', df=val_df, transform=transform_val, shuffle=True, mode='val')
+    # valloader = DataLoader(
+    #     valset, batch_size=hp.batch_size, shuffle=True, **kwargs)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=hp.lr)
-    criterion = torch.jit.script(
-        torch.nn.MarginRankingLoss(margin=0.2)).to(device)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    # model = TripletNet(ResNetExtractor(version=101))
+    # print('Number of parameters: ', count_parameters(model))
 
-    for epoch in range(1, hp.epochs + 1):
-        train(trainloader, model, criterion, optimizer, scheduler, epoch)
+    # model.apply(weights_init)
+    # model = torch.jit.script(model).to(device)
 
-        acc = test(valloader, model, criterion, epoch)
+    # optimizer = torch.optim.Adam(model.parameters(), lr=hp.lr)
+    # criterion = torch.jit.script(
+    #     torch.nn.MarginRankingLoss(margin=0.2)).to(device)
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
-        # remember best acc and save checkpoint
-        is_best = acc > best_acc
-        best_acc = max(acc, best_acc)
-        save_checkpoint({
-            'epoch': epoch,
-            'state_dict': model.state_dict(),
-            'optimizer': optimizer.state_dict(),
-            'scheduler': scheduler.state_dict(),
-            'best_pred': best_acc,
-        }, is_best)
+    # for epoch in range(1, hp.epochs + 1):
+    #     train(trainloader, model, criterion, optimizer, scheduler, epoch)
+
+    #     acc = test(valloader, model, criterion, epoch)
+
+    #     # remember best acc and save checkpoint
+    #     is_best = acc > best_acc
+    #     best_acc = max(acc, best_acc)
+    #     save_checkpoint({
+    #         'epoch': epoch,
+    #         'state_dict': model.state_dict(),
+    #         'optimizer': optimizer.state_dict(),
+    #         'scheduler': scheduler.state_dict(),
+    #         'best_pred': best_acc,
+    #     }, is_best)
+
 
 
 def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
@@ -214,7 +226,7 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
             data1, data2, data3)
         # 1 means, dista should be larger than distb
         target = torch.FloatTensor(dista.size()).fill_(1)
-
+        # print(data1.shape)
         # print(dista.shape)
         # print(target.shape)
         # print(data1.shape)
@@ -227,10 +239,11 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
             2) + embedded_y.norm(2) + embedded_z.norm(2)
         loss = loss_triplet + 0.001 * loss_embedd
 
-        # measure accuracy and record loss
-        acc = accuracy(dista, distb)
+        # # measure accuracy and record loss
+        # acc = accuracy(dista, distb)
+
         losses.update(loss_triplet.data.cpu().numpy(), data1.size(0))
-        accs.update(acc, data1.size(0))
+        # accs.update(acc, data1.size(0))
         emb_norms.update(loss_embedd.data/3, data1.size(0))
 
         # compute gradient and do optimizer step
@@ -241,17 +254,18 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
         if batch_idx % hp.log_interval == 0:
             print('Train Epoch: {} [{}/{}]\t'
                   'Loss: {:.4f} ({:.4f}) \t'
-                  'Acc: {:.2f}% ({:.2f}%) \t'
+                #   'Acc: {:.2f}% ({:.2f}%) \t'
                   'Emb_Norm: {:.2f} ({:.2f})'.format(
                       epoch, batch_idx * len(data1), len(train_loader.dataset),
                       losses.val, losses.avg,
-                      100. * accs.val, 100. * accs.avg, emb_norms.val, emb_norms.avg))
+                    #   100. * accs.val, 100. * accs.avg, 
+                      emb_norms.val, emb_norms.avg))
 
     scheduler.step(losses.avg)
     # log avg values to somewhere
-    plotter.plot('acc', 'train', 'class acc', epoch, accs.avg)
+    # plotter.plot('acc', 'train', 'class acc', epoch, accs.avg)
     plotter.plot('loss', 'train', 'class loss', epoch, losses.avg)
-    plotter.plot('emb_norms', 'train', 'class emb', epoch, emb_norms.avg)
+    plotter.plot('emb_norms', 'train','class emb', epoch, emb_norms.avg)
 
 
 def test(test_loader, tnet, criterion, epoch):
@@ -264,28 +278,34 @@ def test(test_loader, tnet, criterion, epoch):
         for _, (data1, data2, data3) in enumerate(test_loader):
             if use_gpu:
                 data1, data2, data3 = data1.cuda(), data2.cuda(), data3.cuda()
-            data1, data2, data3 = Variable(
-                data1), Variable(data2), Variable(data3)
+            data1, data2, data3 = Variable(data1), Variable(data2), Variable(data3)
 
+            accuracies = [0, 0, 0]
+            acc_threshes = [0, 0.2, 0.5]
             # compute output
             dista, distb, _, _, _ = tnet(data1, data2, data3)
             target = torch.FloatTensor(dista.size()).fill_(1)
             target = Variable(target).to(device)
-            print('Dista: ', dista.shape)
-            print('Distb: ', distb.shape)
-            print('Target: ', target.shape)
 
             test_loss = criterion(dista, distb, target).data.cpu().numpy()
-            print(test_loss)
 
             # measure accuracy and record loss
-            acc = accuracy(dista, distb)
-            accs.update(acc, data1.size(0))
+            for i in range(len(accuracies)):
+                prediction = (distb - dista - hp.margin * acc_threshes[i]).cpu().data
+                prediction = prediction.view(prediction.numel())
+                prediction = (prediction > 0).float()
+                batch_acc = prediction.sum() * 1.0 / prediction.numel()
+                accuracies[i] += batch_acc            
+            
+            # accs.update(acc, data1.size(0))
             losses.update(test_loss, data1.size(0))
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {:.2f}%\n'.format(
-        losses.avg, 100. * accs.avg))
-    plotter.plot('acc', 'test', 'class acc', epoch, accs.avg)
+    print('\nTest set: Average loss: {:.4f}'.format(losses.avg))
+    for i in range(len(accuracies)):
+        print('Test Accuracy with diff = {}% of margin: {}'.format(acc_threshes[i] * 100, accuracies[i] / len(test_loader)))
+    print("****************************************************************\n")
+
+    # plotter.plot('acc', 'test', 'class acc', epoch, accs.avg)
     plotter.plot('loss', 'test', 'class loss', epoch, losses.avg)
     return accs.avg
 

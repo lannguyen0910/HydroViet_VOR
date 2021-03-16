@@ -4,15 +4,17 @@ import yaml
 class Hyperparams:
     name = 'HydroViet'
     size = (224, 224)
-    batch_size = 32
-    num_workers = 4
-    lr = 3e-4
+    batch_size = 16
+    num_workers = 2
+    lr = 1e-4
     epochs = 20
     pin_memory = True
     log_interval = 20
     log_dir = './ckpt/resnet'
     train_csv = './csv/write_train.csv'
     val_csv = './csv/write_val.csv'
+    margin = 1.0
+    ckp = f'runs/{name}/model_best.pth.tar'
 
 
 class Config():
