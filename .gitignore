@@ -1,6 +1,7 @@
 .vscode
 */__pycache__
 */*/__pycache__
+trainer/VOR_trainer.py
 logger/run/*
 pi.py
 trainingSample
@@ -10,3 +11,4 @@ Custom_Template_Pytorch
 VOR_train.py
 train
 testing
+trainer/VOR_trainer.py

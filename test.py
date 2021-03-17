@@ -87,16 +87,23 @@ def main():
     ])
 
     testset = TripletDataset(
-        root='testing2', transform=transform_test, shuffle=True, mode='test')
+        root='test_data', transform=transform_test, shuffle=True, mode='test')
     testloader = DataLoader(
-        testset, batch_size=hp.batch_size, shuffle=True, **kwargs)
+        testset, batch_size=hp.batch_size, **kwargs)
 
     embeddings = generate_embeddings(testloader, model)
 
-    print(embeddings.shape)
+    # print(embeddings.shape)
+    num_images = embeddings.shape[0]
+
+    flattened_embedding = embeddings.reshape((num_images, -1))
+    # print(flattened_embedding.shape)
+
     final_data = {
-        'embeddings': embeddings,
+        'embeddings': flattened_embedding,
     }
+
+    np.save(hp.embed_path, flattened_embedding)
 
     dst_dir = os.path.join('runs', hp.name, 'tSNE')
     make_dir_if_not_exist(dst_dir)
@@ -111,9 +118,9 @@ def main():
 def generate_embeddings(data_loader, model):
     with torch.no_grad():
         model.eval()
-        labels = None
+        # labels = None
         embeddings = None
-        for batch_idx, batch_imgs in tqdm(enumerate(data_loader)):
+        for _, batch_imgs in tqdm(enumerate(data_loader)):
             batch_imgs = Variable(batch_imgs.to(device))
             batch_E = model.get_embedding(batch_imgs)
             batch_E = batch_E.data.cpu().numpy()
@@ -129,7 +136,7 @@ def vis_tSNE(embeddings):
     X_embedded = TSNE(n_components=2).fit_transform(
         embeddings[0:num_samples, :])
 
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
 
     x, y = X_embedded[:, 0], X_embedded[:, 1]
     colors = plt.cm.rainbow(np.linspace(0, 1, 10))

@@ -109,6 +109,9 @@ class TripletDataset(Dataset):
             self.data = self.load_data()
             self.index = self.df.index.values
             self.labels = self.df.iloc[:, 1].values
+        
+        else:
+            self.data = self.load_test()
 
     def load_data(self):
         """Load images and shuffle it -> data (list)"""
@@ -128,6 +131,7 @@ class TripletDataset(Dataset):
         return data
 
     def load_test(self):
+        """Load test set"""
         data = []
         img_labels = sorted(os.listdir(self.root))
         for label in img_labels:
