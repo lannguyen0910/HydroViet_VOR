@@ -24,7 +24,7 @@ def get_compute(types=None):
         return compute_multiclass
 
 
-class ClassificationAccuracyMetric:
+class ClassificationAccuracyMetric():
     """
     - Simple classification metrics to compute accuracy base on number of correct outputs
     """

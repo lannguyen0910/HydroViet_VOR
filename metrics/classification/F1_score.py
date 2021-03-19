@@ -2,9 +2,10 @@ import torch
 import random
 import torch.nn as nn
 import torch.nn.functional as F
+from metrics.metrics_template import TemplateMetric
 
 
-class ClassificationF1Score:
+class ClassificationF1Score(TemplateMetric):
     """
     - F1-score in image classification (types: 'macro', 'micro', 'weighted')
     """

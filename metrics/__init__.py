@@ -1,1 +1,1 @@
-from .metrics_template import *
+from .metrics_template import TemplateMetric
