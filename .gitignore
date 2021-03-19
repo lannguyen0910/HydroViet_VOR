@@ -4,6 +4,7 @@
 trainer/VOR_trainer.py
 logger/run/*
 pi.py
+ssd
 trainingSample
 testSample
 trainingSet
