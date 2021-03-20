@@ -1,0 +1,5 @@
+yaml
+visdom
+efficientnet-pytorch
+tqdm
+tensorboard

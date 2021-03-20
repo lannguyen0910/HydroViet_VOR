@@ -14,5 +14,6 @@ def set_seed(seed=SEED, device=True):
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.fastest = True
     else:
         torch.manual_seed(seed)

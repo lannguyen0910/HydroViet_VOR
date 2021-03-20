@@ -12,4 +12,4 @@ Custom_Template_Pytorch
 VOR_train.py
 train
 testing
-trainer/VOR_trainer.py
+VOR_trainer.py

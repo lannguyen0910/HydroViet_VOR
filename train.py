@@ -10,11 +10,9 @@ from utils.getter import *
 # from random import shuffle
 # from models.classifier import Classifier
 import argparse
-from visdom import Visdom
 import pandas as pd
 import shutil
 from torchvision import transforms
-import numpy as np
 # from torchsummary import summary
 
 
@@ -86,69 +84,6 @@ use_gpu = torch.cuda.is_available()
 device = torch.device('cuda' if use_gpu else 'cpu')
 best_acc = 0
 
-mean = [0.485, 0.456, 0.406]
-std = [0.229, 0.224, 0.225]
-normalize = transforms.Normalize(mean=mean, std=std)
-transform_train = transforms.Compose([
-    transforms.Resize(hp.size),
-    transforms.ToTensor(),
-    transforms.RandomHorizontalFlip(),
-    normalize,
-
-])
-
-transform_val = transforms.Compose([
-    transforms.Resize(hp.size),
-    transforms.ToTensor(),
-    normalize
-])
-
-
-class VisdomLinePlotter(object):
-    """Plots to Visdom"""
-
-    def __init__(self, env_name='main'):
-        self.viz = Visdom(port='8000')
-        self.env = env_name
-        self.plots = {}
-
-    def plot(self, var_name, split_name, title_name, x, y):
-        if var_name not in self.plots:
-            self.plots[var_name] = self.viz.line(X=np.array([x, x]), Y=np.array([float(y), float(y)]), env=self.env, opts=dict(
-                legend=[split_name],
-                title=title_name,
-                xlabel='Epochs',
-                ylabel=var_name
-            ))
-        else:
-            self.viz.line(X=np.array([x]), Y=np.array([float(
-                y)]), env=self.env, win=self.plots[var_name], name=split_name, update='append')
-
-
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-
-def accuracy(dista, distb):
-    margin = 0
-    pred = (dista - distb - margin).cpu().data
-    return (pred > 0).sum() * 1.0/dista.size()[0]
-
 
 def main():
     set_seed()
@@ -167,46 +102,43 @@ def main():
 
     train_dataloader = DataLoader(q_train, batch_size=1, num_workers=1, drop_last=False,
                                   shuffle=True, collate_fn=partial(collate_fn, augment=True), pin_memory=False)
-    for step, (img_tensor, target_tensor) in enumerate(train_dataloader):
-        print(img_tensor.size(), target_tensor.size())
 
-    # trainset = TripletDataset(
-    #     root='train', df=train_df, transform=transform_train, shuffle=True, mode='train')
-    # trainloader = DataLoader(
-    #     trainset, batch_size=hp.batch_size, shuffle=True, **kwargs)
+    trainset = TripletDataset(
+        root='train', df=train_df, transform=transforms_train, shuffle=True, mode='train')
+    trainloader = DataLoader(
+        trainset, batch_size=hp.batch_size, shuffle=True, **kwargs)
 
-    # valset = TripletDataset(
-    #     root='testing', df=val_df, transform=transform_val, shuffle=True, mode='val')
-    # valloader = DataLoader(
-    #     valset, batch_size=hp.batch_size, shuffle=True, **kwargs)
+    valset = TripletDataset(
+        root='testing', df=val_df, transform=transforms_val, shuffle=True, mode='val')
+    valloader = DataLoader(
+        valset, batch_size=hp.batch_size, shuffle=True, **kwargs)
 
-    # model = TripletNet(ResNetExtractor(version=101))
-    # print('Number of parameters: ', count_parameters(model))
+    model = TripletNet(ResNetExtractor(version=101))
+    print('Number of parameters: ', count_parameters(model))
 
-    # model.apply(weights_init)
-    # model = torch.jit.script(model).to(device)
+    model.apply(weights_init)
+    model = torch.jit.script(model).to(device)
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr=hp.lr)
-    # criterion = torch.jit.script(
-    #     torch.nn.MarginRankingLoss(margin=0.2)).to(device)
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    optimizer = torch.optim.Adam(model.parameters(), lr=hp.lr)
+    criterion = torch.jit.script(
+        torch.nn.MarginRankingLoss(margin=0.2)).to(device)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
-    # for epoch in range(1, hp.epochs + 1):
-    #     train(trainloader, model, criterion, optimizer, scheduler, epoch)
+    for epoch in range(1, hp.epochs + 1):
+        train(trainloader, model, criterion, optimizer, scheduler, epoch)
 
-    #     acc = test(valloader, model, criterion, epoch)
+        acc = test(valloader, model, criterion, epoch)
 
-    #     # remember best acc and save checkpoint
-    #     is_best = acc > best_acc
-    #     best_acc = max(acc, best_acc)
-    #     save_checkpoint({
-    #         'epoch': epoch,
-    #         'state_dict': model.state_dict(),
-    #         'optimizer': optimizer.state_dict(),
-    #         'scheduler': scheduler.state_dict(),
-    #         'best_pred': best_acc,
-    #     }, is_best)
-
+        # remember best acc and save checkpoint
+        is_best = acc > best_acc
+        best_acc = max(acc, best_acc)
+        save_checkpoint({
+            'epoch': epoch,
+            'state_dict': model.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'scheduler': scheduler.state_dict(),
+            'best_pred': best_acc,
+        }, is_best)
 
 
 def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
@@ -254,18 +186,18 @@ def train(train_loader, tnet, criterion, optimizer, scheduler, epoch):
         if batch_idx % hp.log_interval == 0:
             print('Train Epoch: {} [{}/{}]\t'
                   'Loss: {:.4f} ({:.4f}) \t'
-                #   'Acc: {:.2f}% ({:.2f}%) \t'
+                  #   'Acc: {:.2f}% ({:.2f}%) \t'
                   'Emb_Norm: {:.2f} ({:.2f})'.format(
                       epoch, batch_idx * len(data1), len(train_loader.dataset),
                       losses.val, losses.avg,
-                    #   100. * accs.val, 100. * accs.avg, 
+                      #   100. * accs.val, 100. * accs.avg,
                       emb_norms.val, emb_norms.avg))
 
     scheduler.step(losses.avg)
     # log avg values to somewhere
     # plotter.plot('acc', 'train', 'class acc', epoch, accs.avg)
     plotter.plot('loss', 'train', 'class loss', epoch, losses.avg)
-    plotter.plot('emb_norms', 'train','class emb', epoch, emb_norms.avg)
+    plotter.plot('emb_norms', 'train', 'class emb', epoch, emb_norms.avg)
 
 
 def test(test_loader, tnet, criterion, epoch):
@@ -278,7 +210,8 @@ def test(test_loader, tnet, criterion, epoch):
         for _, (data1, data2, data3) in enumerate(test_loader):
             if use_gpu:
                 data1, data2, data3 = data1.cuda(), data2.cuda(), data3.cuda()
-            data1, data2, data3 = Variable(data1), Variable(data2), Variable(data3)
+            data1, data2, data3 = Variable(
+                data1), Variable(data2), Variable(data3)
 
             accuracies = [0, 0, 0]
             acc_threshes = [0, 0.2, 0.5]
@@ -291,18 +224,20 @@ def test(test_loader, tnet, criterion, epoch):
 
             # measure accuracy and record loss
             for i in range(len(accuracies)):
-                prediction = (distb - dista - hp.margin * acc_threshes[i]).cpu().data
+                prediction = (distb - dista - hp.margin *
+                              acc_threshes[i]).cpu().data
                 prediction = prediction.view(prediction.numel())
                 prediction = (prediction > 0).float()
                 batch_acc = prediction.sum() * 1.0 / prediction.numel()
-                accuracies[i] += batch_acc            
-            
+                accuracies[i] += batch_acc
+
             # accs.update(acc, data1.size(0))
             losses.update(test_loss, data1.size(0))
 
     print('\nTest set: Average loss: {:.4f}'.format(losses.avg))
     for i in range(len(accuracies)):
-        print('Test Accuracy with diff = {}% of margin: {}'.format(acc_threshes[i] * 100, accuracies[i] / len(test_loader)))
+        print('Test Accuracy with diff = {}% of margin: {}'.format(
+            acc_threshes[i] * 100, accuracies[i] / len(test_loader)))
     print("****************************************************************\n")
 
     # plotter.plot('acc', 'test', 'class acc', epoch, accs.avg)

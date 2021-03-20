@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from metrics.metrics_template import TemplateMetric
 
 
 def compute_multiclass(output, target):
@@ -24,7 +25,7 @@ def get_compute(types=None):
         return compute_multiclass
 
 
-class ClassificationAccuracyMetric():
+class ClassificationAccuracyMetric(TemplateMetric):
     """
     - Simple classification metrics to compute accuracy base on number of correct outputs
     """

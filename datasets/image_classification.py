@@ -92,9 +92,7 @@ class ImageClassificationDataset(data.Dataset):
         assert len(img.getbands()) == 3, 'Gray image not allow'
 
         if self.transforms is not None:
-            results = self.transforms(img=img, category=[category])
-            img = results['img']
-            category = results['category']
+            img = self.transforms(img)
 
         return {'img': img,
                 'category': category}  # cls_id
@@ -106,9 +104,9 @@ class ImageClassificationDataset(data.Dataset):
         plt.title(self.n_classes[category])
         plt.show()
 
-    def visualize_image(self, idx=None, figsize=(20, 20)):
+    def visualize_image(self, idx=None, figsize=(20, 20), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
         """
-        Visualize an image by passing idx
+        Visualize an image by passing idx and denormalize itself
         """
         if idx is None:
             idx = random.randint(0, len(self.data))
@@ -118,9 +116,10 @@ class ImageClassificationDataset(data.Dataset):
         category = item['category']
 
         # denormalize to display image
-        results = self.transforms.Denormalize(
-            img=img, box=None, category=category)
-        img, category = results['img'], results['category']
+        img = img.numpy().squeeze().transpose(1, 2, 0)
+        img = (img * std + mean)
+        img = np.clip(img, 0., 1.)
+
         self.visualize(img, category, figsize=figsize)
 
     def collate_fn(self, batch):

@@ -17,9 +17,6 @@ import numpy as np
 use_gpu = torch.cuda.is_available()
 device = torch.device('cuda' if use_gpu else 'cpu')
 
-mean = [0.485, 0.456, 0.406]
-std = [0.229, 0.224, 0.225]
-normalize = transforms.Normalize(mean=mean, std=std)
 # from datasets.vocabulary import VocabularyDataset
 # from datasets.text_classification import TextClassificationDataset
 # from augmentation.nlp_tokenizer import TextTokenizer
@@ -79,15 +76,8 @@ def main():
     model = model.to(device)
     model.load_state_dict(model_dict)
 
-    transform_test = transforms.Compose([
-        transforms.Resize(hp.size),
-        transforms.CenterCrop(hp.size),
-        transforms.ToTensor(),
-        normalize
-    ])
-
     testset = TripletDataset(
-        root='test_data', transform=transform_test, shuffle=True, mode='test')
+        root='test_data', transform=transforms_val, shuffle=True, mode='test')
     testloader = DataLoader(
         testset, batch_size=hp.batch_size, **kwargs)
 

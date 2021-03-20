@@ -5,10 +5,10 @@ import torchvision.models as models
 
 
 class Classifier(BaselineModel):
-    def __init__(self, n_classes, **kwargs):
+    def __init__(self, backbone, n_classes, **kwargs):
         super(Classifier, self).__init__(**kwargs)
-        self.model = models.resnet34(pretrained=True)
-        self.name = 'ResNet34'
+        self.model = backbone
+        self.name = 'Classifier'
         self.optimizer = self.optimizer(self.parameters(), lr=self.lr)
         self.set_optimizer_params()
         self.n_classes = n_classes

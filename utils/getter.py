@@ -4,9 +4,10 @@ from datasets import *
 from dataloaders import *
 from models import *
 from trainer import *
-# from augmentation import *
+from augmentation import *
 from logger import *
 from utils.helper import *
+from .meter import *
 # from utils.split_data import *
 from ssd import *
 from configs.config import Hyperparams as hp
@@ -25,3 +26,17 @@ def count_parameters(model):
 def weights_init(m):
     if isinstance(m, torch.nn.Conv2d or torch.nn.Linear):
         torch.nn.init.kaiming_normal_(m.weight)
+
+
+def accuracy(dista, distb):
+    margin = 0
+    pred = (dista - distb - margin).cpu().data
+    return (pred > 0).sum() * 1.0/dista.size()[0]
+
+
+def get_instance(config, **kwargs):
+    assert 'name' in config
+    config.setdefault('args', {})
+    if config['args'] is None:
+        config['args'] = {}
+    return globals()[config['name']](**config['args'], **kwargs)

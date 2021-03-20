@@ -1,5 +1,6 @@
 import albumentations as A
 import cv2
+from albumentations.pytorch import ToTensorV2
 
 # albumentations-teams example notebook
 
@@ -56,7 +57,8 @@ def strong_aug(p=.5):
 
 
 transforms_train = A.Compose([
-    A.RandomCrop(width=256, height=256),
+    A.SmallestMaxSize(max_size=256),
+    A.RandomCrop(width=224, height=224),
 
     A.OneOf([
         A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,
@@ -84,5 +86,17 @@ transforms_train = A.Compose([
         A.HorizontalFlip(),
         A.VerticalFlip(),
         A.NoOp()
-    ])
+    ]),
+
+    A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+    ToTensorV2(),
 ])
+
+transforms_val = A.Compose(
+    [
+        A.SmallestMaxSize(max_size=256),
+        A.CenterCrop(height=224, width=224),
+        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ToTensorV2(),
+    ]
+)
