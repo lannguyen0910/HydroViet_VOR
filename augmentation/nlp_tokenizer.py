@@ -8,9 +8,9 @@ from string import punctuation
 from autocorrect import Speller
 from nltk.tokenize import word_tokenize
 
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('wordnet')
+# nltk.download('stopwords')
+# nltk.download('punkt')
+# nltk.download('wordnet')
 
 spell = Speller(lang='en')
 stopwords = stopwords.words('english')

@@ -109,7 +109,7 @@ class TripletDataset(Dataset):
             self.data = self.load_data()
             self.index = self.df.index.values
             self.labels = self.df.iloc[:, 1].values
-        
+
         else:
             self.data = self.load_test()
 
@@ -156,7 +156,7 @@ class TripletDataset(Dataset):
 
     def __getitem__(self, idx):
         anchor_name, class_name = self.data[idx]
-        category = self.class_idxes[class_name]
+        # category = self.class_idxes[class_name]
 
         anchor_path = os.path.join(self.root, anchor_name)
         anchor_img = Image.open(anchor_path).convert('RGB')

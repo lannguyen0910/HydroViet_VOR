@@ -9,8 +9,9 @@ from logger import *
 from utils.helper import *
 from .meter import *
 # from utils.split_data import *
-from ssd import *
+# from ssd import *
 from configs.config import Hyperparams as hp
+from configs.config import Config
 
 import torch
 import torch.utils.data as data

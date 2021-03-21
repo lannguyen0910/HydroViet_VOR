@@ -17,8 +17,12 @@ class Hyperparams:
     ckp = f'runs/{name}/model_best.pth.tar'
 
 
-class Config():
+class Config:
+
     def __init__(self, yaml_path):
+        """
+        Config for yaml file
+        """
         yaml_file = open(yaml_path)
         self._attr = yaml.load(yaml_file, Loader=yaml.FullLoader)['settings']
 

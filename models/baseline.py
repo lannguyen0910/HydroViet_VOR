@@ -1,5 +1,5 @@
 import torch.nn as nn
-from metrics import ClassificationAccuracyMetric
+from metrics.classification import ClassificationAccuracyMetric
 
 
 class BaselineModel(nn.Module):

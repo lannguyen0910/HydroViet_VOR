@@ -1,37 +1,55 @@
 settings:
-  
   dataset:
-    name:
-    args:
-      img_dir: 
-
-    augmentations:
-      image_size: [256,256]
-      horizontal_flip: 0
-      shear: 0
-      rotation: 0
-      colorjitter:
-        brightness: 0
-        constrast: 0
-        saturation: 0
-        hue: 0
-      cutout: 0
+    train:
+      name: ImageClassificationDataset
+      args:
+        root: train
+    val:
+      name: ImageClassificationDataset
+      args:
+        root: testing
+    # augmentations:
+    #   image_size: [256,256]
+    #   horizontal_flip: 0
+    #   shear: 0
+    #   rotation: 0
+    #   colorjitter:
+    #     brightness: 0
+    #     constrast: 0
+    #     saturation: 0
+    #     hue: 0
+    #   cutout: 0
 
   model:
-    name:
+    name: Classifier
+    args:
+      backbone:
+        name: ResNetExtractor
+        args:
+          version: resnet152
+      n_classes: 5
+
+  optimizer:
+    name: AdamW # Adam, AdaS
     args:
 
-  backbone:
-    name: 
-    args: 
+  scheduler:
+    name: ReduceLROnPlateau
+    args:
+      mode: min
+      factor: 0.5
+      patience: 5
+      verbose: True
 
   criterion:
-    name:
+    name: CrossEntropyLoss
     args:
 
   metrics:
-    - name: 
+    - name: ClassificationF1Score
       args:
-    - name:
+        types:
+
+    - name: ClassificationAccuracyMetric
       args:
-      
+        types:
