@@ -33,6 +33,7 @@ class CheckPoint:
         iters = int(kwargs['iters']) if 'iters' in kwargs else 0
         best_value = float(kwargs['best_value']
                            ) if 'best_value' in kwargs else 0
+
         model_path = "_".join([model.model_name, str(epoch), str(iters)])
 
         weights = {

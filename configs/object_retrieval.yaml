@@ -5,19 +5,9 @@ settings:
   val_imgs: val
   test_imgs: test
 
-  dataset:
-    train:
-      name: ImageClassificationDataset
-      args:
-        root: train
-    val:
-      name: ImageClassificationDataset
-      args:
-        root: testing
+  #################   TRAINING CONFIG   ###################
 
-    #################   TRAINING CONFIG   ###################
-
-  model_name: "efficientnet_b6" #[]
+  model_arch: "efficientnet_b6" #[]
 
   pretrained_backbone: "" # Pretrained backbone
 
@@ -33,7 +23,7 @@ settings:
 
   # learning rate policy
   lr_policy:
-    name: "adam" #[adam|sgd]
+    name: "adam" #[adam|sgd] (adam means AdamW optimizer)
     lr: 0.001 #[adam: 1e-3 | sgd: 1e-2]
     momentum: 0.937
     weight_decay: 0.0005
