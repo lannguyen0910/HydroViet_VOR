@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from .baseline import BaselineModel
-import torchvision.models as models
 
 
 class Classifier(BaselineModel):
@@ -39,8 +38,14 @@ class Classifier(BaselineModel):
             inputs = inputs.to(self.device)
             targets = targets.to(self.device)
 
-        outputs = self.model(inputs)
-        loss = self.criterion(outputs, targets)
+            with torch.cuda.amp.autocast():
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, targets)
+
+        else:
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs, targets)
+
         return loss
 
     def inference_step(self, batch):

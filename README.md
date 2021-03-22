@@ -2,7 +2,8 @@
 Visual Object Retrieval in satellite images with Triplet Network generated from Template (Processing) 
 ## Data Structure
 - Train data and validation data contain 5 classes: dams, buildings, house, river, bridge. Collect by hands from Google Earth (5000 images for now)
-- Test data contains 100 ima
+- Test data contains 100 images (for now)
+
 ```
 HydroViet_VOR
 |
@@ -69,5 +70,6 @@ Using GANs to train CNN models like EfficientNet, Resnet on satellite data
 
 
 ## Sources
+Make sure to give them a star!
 - Template: https://github.com/kaylode/custom-template/
 - Triplet loss: https://github.com/vltanh/pytorch-reidentification

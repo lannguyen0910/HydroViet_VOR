@@ -1,2 +1,2 @@
-from .checkpoint import CheckPoint, load
+from .checkpoint import *
 from .trainer import Trainer

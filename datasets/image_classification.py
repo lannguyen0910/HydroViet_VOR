@@ -4,8 +4,10 @@ import torch.utils.data as data
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import csv
-from PIL import Image
+import cv2
+
+from augmentation.transforms import Denormalize
+import albumentations as A
 
 
 class ImageClassificationDataset(data.Dataset):
@@ -14,6 +16,7 @@ class ImageClassificationDataset(data.Dataset):
                  n_samples=None,
                  shuffle=False,
                  mode='train'):
+
         self.root = root
         self.transforms = transforms
         self.n_samples = n_samples
@@ -28,9 +31,10 @@ class ImageClassificationDataset(data.Dataset):
         data = []
 
         for cls in self.n_classes:
-            img_labels = sorted(os.listdir(os.path.join(self.root, cls)))
-            for label in img_labels:
-                data.append([f'{cls}/{label}', cls])
+            data_labels = sorted(os.listdir(os.path.join(self.root, cls)))
+            for img_name in data_labels:
+                img_path = os.path.join(self.root, cls, img_name)
+                data.append([img_path, cls])
 
         if self.shuffle:
             random.shuffle(data)
@@ -59,7 +63,10 @@ class ImageClassificationDataset(data.Dataset):
         return count_dict
 
     def plotting(self, figsize=(12, 12), types=['freqs']):
-        """Plot distribution of classes with number"""
+        """
+        Plot distribution of classes with number
+        Call after init the image classification dataset
+        """
         # plt.style.use('dark_background')
         ax = plt.figure(figsize=figsize)
 
@@ -83,17 +90,20 @@ class ImageClassificationDataset(data.Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        image_name, class_name = self.data[idx]
+        img_path, class_name = self.data[idx]
         category = self.class_idxes[class_name]
 
-        img_path = os.path.join(self.root, image_name)
-        img = Image.open(img_path).convert('RGB')
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = img.astype(np.uint8)
+
         # width, height = img.size
-        assert len(img.getbands()) == 3, 'Gray image not allow'
+        # assert len(img.getbands()) == 3, 'Gray image not allow'
 
         if self.transforms is not None:
-            img = self.transforms(img)
+            img = self.transforms(image=img)
 
+        category = torch.LongTensor([category])
         return {'img': img,
                 'category': category}  # cls_id
 
@@ -104,7 +114,7 @@ class ImageClassificationDataset(data.Dataset):
         plt.title(self.n_classes[category])
         plt.show()
 
-    def visualize_image(self, idx=None, figsize=(20, 20), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    def visualize_image(self, idx=None, figsize=(20, 20)):
         """
         Visualize an image by passing idx and denormalize itself
         """
@@ -115,11 +125,19 @@ class ImageClassificationDataset(data.Dataset):
         img = item['img']
         category = item['category']
 
-        # denormalize to display image
-        img = img.numpy().squeeze().transpose(1, 2, 0)
-        img = (img * std + mean)
-        img = np.clip(img, 0., 1.)
+        # Denormalize and reverse-tensorize
+        normalize = False
+        if self.transforms is not None:
+            for x in self.transforms.transforms:
+                if isinstance(x, A.Normalize):
+                    normalize = True
+                    denormalize = Denormalize(mean=x.mean, std=x.std)
 
+        # Denormalize and reverse-tensorize
+        if normalize:
+            img = denormalize(img=img['image'])
+
+        category = category.numpy().item()
         self.visualize(img, category, figsize=figsize)
 
     def collate_fn(self, batch):
