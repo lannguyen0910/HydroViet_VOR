@@ -1,4 +1,5 @@
 import yaml
+import pprint
 
 
 class Hyperparams:
@@ -31,3 +32,8 @@ class Config:
             return self._attr[attr]
         except KeyError:
             return None
+
+    def __str__(self):
+        print("##########   CONFIGURATION INFO   ##########")
+        pprint.PrettyPrinter(indent=2).pprint(self._attr)
+        return '\n'

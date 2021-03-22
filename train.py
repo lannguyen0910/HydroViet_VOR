@@ -85,6 +85,12 @@ device = torch.device('cuda' if use_gpu else 'cpu')
 best_acc = 0
 
 
+def accuracy(dista, distb):
+    margin = 0
+    pred = (dista - distb - margin).cpu().data
+    return (pred > 0).sum() * 1.0/dista.size()[0]
+
+
 def main():
     set_seed()
     global best_acc, plotter

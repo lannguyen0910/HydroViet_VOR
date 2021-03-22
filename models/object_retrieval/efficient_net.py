@@ -6,7 +6,7 @@ from efficientnet_pytorch import EfficientNet
 class EfficientEmbeddingNet(EmbeddingNet):
     def __init__(self, version):
         super().__init__()
-        assert version in range(8)  # EfficientNet B0->B7
+        assert version in range(9)  # EfficientNet B0->B7
         self.extractor = EfficientNet.from_pretrained(
             f'efficientnet-b{version}')
         self.feature_dim = self.extractor._fc.in_features

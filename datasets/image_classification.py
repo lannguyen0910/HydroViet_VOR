@@ -45,6 +45,9 @@ class ImageClassificationDataset(data.Dataset):
         return data
 
     def class_to_idx(self):
+        """
+        Convert class_name -> class_idxes
+        """
         class_idxes = {}
         idx = 0
         for cls in self.n_classes:
@@ -97,7 +100,7 @@ class ImageClassificationDataset(data.Dataset):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = img.astype(np.uint8)
 
-        # width, height = img.size
+        # This is for PIL format
         # assert len(img.getbands()) == 3, 'Gray image not allow'
 
         if self.transforms is not None:
