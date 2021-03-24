@@ -1,3 +1,4 @@
+from metrics.classification.confusion_matrix import ConfusionMatrix
 from metrics.classification.F1_score import ClassificationF1Score
 from metrics.classification.classification_accuracy import ClassificationAccuracyMetric
 from models.timm_models import BaseTimmModel
@@ -22,7 +23,7 @@ def main(config, args):
         config)
 
     net = BaseTimmModel(n_classes=trainset.num_classes,
-                        model_arch=config.model_arch)
+                        model_arch=config.model_arch, head='mlp', syncBN=config.syncBN)
 
     if args.saved_path is not None:
         args.saved_path = os.path.join(args.saved_path, config.project_name)
@@ -32,9 +33,8 @@ def main(config, args):
 
     metric = [
         ClassificationAccuracyMetric(),
-        ClassificationF1Score(n_classes=trainset.num_classes)
-        # BalancedAccuracyMetric(num_classes=trainset.num_classes),
-        # ConfusionMatrix(trainset.classes),
+        ClassificationF1Score(n_classes=trainset.num_classes),
+        ConfusionMatrix(trainset.classes),
     ]
 
     optimizer, optimizer_params = get_lr_policy(config.lr_policy)
@@ -111,8 +111,8 @@ if __name__ == '__main__':
     parser.add_argument('--resume', type=str, default=None,
                         help='whether to load weights from a checkpoint, set None to initialize')
     parser.add_argument('--saved_path', type=str, default='./weights')
-    parser.add_argument('--freeze_backbone', action='store_true',
-                        help='whether to freeze the backbone')
+    # parser.add_argument('--freeze_backbone', action='store_true',
+    #                     help='whether to freeze the backbone')
 
     args = parser.parse_args()
     config = Config(os.path.join('configs', args.config + '.yaml'))

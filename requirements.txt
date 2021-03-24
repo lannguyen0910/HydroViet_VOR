@@ -1,5 +1,10 @@
+torch
 yaml
 visdom
 efficientnet-pytorch
 tqdm
 tensorboard
+apex
+sklearn
+opencv-python
+timm

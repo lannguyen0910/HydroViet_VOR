@@ -1,6 +1,7 @@
 .vscode
 */__pycache__
 */*/__pycache__
+detector.py
 trainer/VOR_trainer.py
 logger/run/*
 pi.py

@@ -44,6 +44,12 @@ class Trainer(nn.Module):
 
         self.epoch = start_epoch
 
+        # For one-cycle lr only
+        if self.scheduler is not None and self.step_per_epoch:
+            self.scheduler.last_epoch = start_epoch - 1
+
+        self.start_iter = start_iter % len(self.train_loader)
+
         print(f'===========================START TRAINING=================================')
         print(f'Training for {num_epochs} epochs ...')
         for epoch in range(self.epoch, self.num_epochs):

@@ -26,9 +26,9 @@ HydroViet_VOR
 |   └───...
 |
 └───test
-    │   1.jpg
-    │   2.jpg
-    |   ...
+|   │   1.jpg
+|   │   2.jpg
+|   |   ...
 ```
 
 ## Method
@@ -44,7 +44,7 @@ HydroViet_VOR
 - Config hyperparameters in configs/config.py
 
 ```
-python train.py
+python trainv1.py
 ```
 
 ## Test
@@ -72,4 +72,4 @@ Using GANs to train CNN models like EfficientNet, Resnet on satellite data
 ## Sources
 Make sure to give them a star!
 - Template: https://github.com/kaylode/custom-template/
-- Triplet loss: https://github.com/vltanh/pytorch-reidentification
+- Supervised Contrast Learning: https://github.com/HobbitLong/SupContrast/

@@ -24,9 +24,19 @@ class Classifier(BaselineModel):
         return self.model(x)
 
     def training_step(self, batch):
+        images = batch['imgs']
+        images = torch.cat([images[0], images[1]], dim=0).to(self.device)
+        print('\nImages concat: ', images.shape)
+
+        categories = batch['categories'].to(self.device)
+        bsz = categories.shape[0]
 
         outputs = self.model(batch, self.device)
-        categories = batch['categories'].to(self.device)
+        feature1, feature2 = torch.split(outputs, [bsz, bsz], dim=0)
+        print('1 of 2 features before concat to output: ', feature1.shape)
+        outputs = torch.cat(
+            [feature1.unsqueeze(1), feature2.unsqueeze(1)], dim=1)
+        print('Outputs after concat 2 features: ', outputs.shape)
 
         loss = self.criterion(outputs, categories)
         loss_dict = {'T': loss.item()}

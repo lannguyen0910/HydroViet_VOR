@@ -40,7 +40,7 @@ class NativeScaler:
     def __init__(self):
         self._scaler = torch.cuda.amp.GradScaler()
 
-    def __call__(self, loss, optimizer, create_graph=False):
+    def __call__(self, loss, create_graph=False):
         self._scaler.scale(loss).backward(create_graph=create_graph)
 
     def step(self, optimizer, clip_grad=None, parameters=None):

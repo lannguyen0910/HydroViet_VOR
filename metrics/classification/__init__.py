@@ -1,2 +1,3 @@
 from .classification_accuracy import ClassificationAccuracyMetric
 from .F1_score import ClassificationF1Score
+from .confusion_matrix import ConfusionMatrix

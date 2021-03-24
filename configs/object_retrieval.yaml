@@ -1,9 +1,9 @@
 settings:
   data: ""
   project_name: "" # also the folder name of the dataset that under ./data folder
-  train_imgs: train
-  val_imgs: val
-  test_imgs: test
+  train_imgs: train_data
+  val_imgs: val_data
+  test_imgs: test_data
 
   #################   TRAINING CONFIG   ###################
 
@@ -16,7 +16,7 @@ settings:
   batch_size: 8
   num_workers: 2
 
-  image_size: [224, 224] # should be square to prevent bugs [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
+  image_size: [256, 256] # should be square to prevent bugs [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
   keep_ratio: False # whether to use resize padding
 
   mixup: True
@@ -32,6 +32,9 @@ settings:
     name:
       "1cycle-yolo" #[plateau | cosine | 1cycle-yolo | 1cycle]
       # if need to specify more scheduler arguments, do it here
+
+  # Apex sync batch normalization (could be helpful)
+  syncBN: True
 
   # gradient accumulation
   mixed_precision: True # whether to use nvidia apex

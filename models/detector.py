@@ -1,7 +1,7 @@
 from torch._C import device
 from .baseline import BaselineModel
 import torch
-import ssd.model as ssd
+import models.object_detection.ssd.model as ssd
 
 
 class Detector(BaselineModel):
