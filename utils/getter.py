@@ -3,11 +3,13 @@ from losses import *
 from datasets import *
 from dataloaders import *
 from models import *
+from optimizers import *
 from trainer import *
 from augmentation import *
 from logger import *
 from utils.helper import *
 from .meter import *
+
 # from utils.split_data import *
 from configs.config import Hyperparams as hp
 from configs.config import Config

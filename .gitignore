@@ -15,4 +15,3 @@ train
 test
 val
 VOR_trainer.py
-csv
