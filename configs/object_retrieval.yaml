@@ -1,19 +1,19 @@
 settings:
   data: ""
   project_name: "" # also the folder name of the dataset that under ./data folder
-  train_imgs: train_data
-  val_imgs: val_data
-  test_imgs: test_data
+  train_imgs: "train_data"
+  val_imgs: "val_data"
+  test_imgs: "test_data"
 
   #################   TRAINING CONFIG   ###################
 
-  model_arch: "efficientnet_b6" #[]
+  model_arch: "efficientnet_b1" #[]
 
   pretrained_backbone: "" # Pretrained backbone
 
   gpu_devices: "0" # supports multi-gpus
   num_epochs: 100
-  batch_size: 8
+  batch_size: 16
   num_workers: 2
 
   image_size: [256, 256] # should be square to prevent bugs [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
@@ -30,7 +30,7 @@ settings:
 
   lr_scheduler:
     name:
-      "1cycle-yolo" #[plateau | cosine | 1cycle-yolo | 1cycle]
+      "cosine" #[plateau | cosine | 1cycle-yolo | 1cycle]
       # if need to specify more scheduler arguments, do it here
 
   # Apex sync batch normalization (could be helpful)
