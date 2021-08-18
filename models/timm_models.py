@@ -62,8 +62,8 @@ class BaseTimmModel(nn.Module):
         else:
             assert False, "Classifier block not implemented yet in Timm models"
 
-        if syncBN:
-            self.model = apex.parallel.convert_syncbn_model(self.model)
+        # if syncBN:
+        #     self.model = apex.parallel.convert_syncbn_model(self.model)
 
         if torch.cuda.is_available():
             if torch.cuda.device_count() > 1:
